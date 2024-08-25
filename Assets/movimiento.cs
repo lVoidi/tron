@@ -5,8 +5,8 @@ using UnityEngine;
 public class Movimiento : MonoBehaviour
 {
     [Header("Ajustes de la motocicleta")]
-    public float factorDerrape = 1.0f;
-    public float factorAceleracion = 30.0f;
+    public float factorDerrape = 0.95f;
+    public float factorAceleracion = 10.0f;
     public float factorGiro = 3.5f;
 
     float entradaAceleration = 0;
