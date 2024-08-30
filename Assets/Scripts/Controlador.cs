@@ -6,7 +6,6 @@ using Unity.VisualScripting;
 
 public class Controlador : MonoBehaviour
 {
-    public Red redNodos = new Red(20);
     
     void Start()
     {
