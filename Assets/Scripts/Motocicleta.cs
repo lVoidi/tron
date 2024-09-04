@@ -165,6 +165,7 @@ namespace Assets.Scripts
                 esInmune = true;
             }
 
+
             // Si el poder es velocidad, aumenta la velocidad de la 
             if (poder.nombre == "Velocidad")
             {

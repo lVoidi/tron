@@ -14,6 +14,7 @@ public class Controlador : MonoBehaviour
 
     // Posición de la celda en la que se encuentra la motocicleta
     public Vector2Int PosicionCelda;
+    public Nodo Cabeza;
 
     // Tiempo entre movimientos
     public float TiempoUltimoMovimiento;
@@ -132,6 +133,8 @@ public class Controlador : MonoBehaviour
 
             // Reinicia el tiempo desde el último movimiento
             TiempoUltimoMovimiento -= TiempoEntreMovimientos;
+
+            Cabeza = InstanciaMotoJugador.Cabeza.nodo;
         }
     }
 

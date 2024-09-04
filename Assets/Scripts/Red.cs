@@ -26,7 +26,13 @@ namespace Assets.Scripts
         public int largo;
         public int ancho;
 
-
+        private GameObject[] objetos = {
+            Texturas.instancia.EscudoPoder,
+            Texturas.instancia.VelocidadPoder,
+            Texturas.instancia.CombustibleItem,
+            Texturas.instancia.EstelaItem,
+            Texturas.instancia.BombaItem
+        };
 
         public Red(int espacios_x, int espacios_y)
         {
@@ -81,42 +87,72 @@ namespace Assets.Scripts
                     }
                 }
             }
-            SpawnearPoder();
-            SpawnearPoder();
-            SpawnearPoder();
-            SpawnearPoder();
-        }
 
-        // Funcion para spawnear un poder en un nodo aleatorio
-        public void SpawnearPoder()
+            GenerarObjetos();
+
+        }
+        
+        public void GenerarObjetos()
         {
-            System.Random rnd = new System.Random();
-            int x = rnd.Next(2, largo - 2);
-            int y = rnd.Next(2, ancho - 2);
-            Nodo nodo = RedNodos[x, y];
-
-            while (nodo.esObstaculo || nodo.esCabeza || nodo.poder != null || nodo.item != null)
+            // Posiciona todos los objetos en lugares aleatorios del mapa
+            foreach (GameObject objeto in objetos)
             {
-                x = rnd.Next(2, largo - 2);
-                y = rnd.Next(2, ancho - 2);
-                nodo = RedNodos[x, y];
+                Vector2Int coord = new Vector2Int(UnityEngine.Random.Range(0, largo), UnityEngine.Random.Range(0, ancho));
+                while (RedNodos[coord.x, coord.y].esObstaculo || RedNodos[coord.x, coord.y].item != null)
+                {
+                    coord = new Vector2Int(UnityEngine.Random.Range(0, largo), UnityEngine.Random.Range(0, ancho));
+                }
+                PosicionarObjetoEnMapa(coord, objeto);
+                CategorizarNodo(objeto, coord);
             }
-            nodo.poder = new Poder();
-
-            // El nombre del poder debe ser uno aleatorio entre "Escudo" y "Velocidad"
-            nodo.poder.nombre = (rnd.Next(0, 2) == 0) ? "Escudo" : "Velocidad";
-
-            Vector3 CoordenadaRelativa = CoordenadaACentro(new Vector2Int(x, y));
-
-            if (nodo.poder.nombre == "Escudo")
-            {
-                Texturas.instancia.EscudoPoder.transform.position = CoordenadaRelativa;
-            } else
-            {
-                Texturas.instancia.VelocidadPoder.transform.position = CoordenadaRelativa;
-            }
-
         }
+
+        public void CategorizarNodo(GameObject objeto, Vector2Int coord)
+        {
+
+            if (objeto == Texturas.instancia.EscudoPoder)
+            {
+                RedNodos[coord.x, coord.y].poder = new Poder
+                {
+                    nombre = "Escudo",
+                };
+            }
+            else if (objeto == Texturas.instancia.VelocidadPoder)
+            {
+                RedNodos[coord.x, coord.y].poder = new Poder
+                {
+                    nombre = "Velocidad",
+                };
+            }
+            else if (objeto == Texturas.instancia.BombaItem)
+            {
+                RedNodos[coord.x, coord.y].item = new Item
+                {
+                    nombre = "Bomba",
+                };
+            }
+            else if (objeto == Texturas.instancia.CombustibleItem)
+            {
+                RedNodos[coord.x, coord.y].item = new Item
+                {
+                    nombre = "Combustible",
+                };
+            }
+            else if (objeto == Texturas.instancia.EstelaItem)
+            {
+                RedNodos[coord.x, coord.y].item = new Item
+                {
+                    nombre = "Estela",
+                };
+
+            }
+        }
+
+        public void PosicionarObjetoEnMapa(Vector2Int coord, GameObject objeto)
+        {
+            objeto.transform.position = CoordenadaACentro(coord);
+        }
+
 
         // Función que toma una coordenada y le mueve el centro, ya que en unity 
         // el centro de la pantalla está en el medio y no en una esquina
