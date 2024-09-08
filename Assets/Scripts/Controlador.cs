@@ -12,7 +12,7 @@ public class Controlador : MonoBehaviour
 {
     // Instancia de la motocicleta del jugador
     public Motocicleta InstanciaMotoJugador;
-
+    public Red Espacio;
     // Posición de la celda en la que se encuentra la motocicleta
     public Vector2Int PosicionCelda;
     public Vector2Int PosicionNodo;
@@ -25,6 +25,7 @@ public class Controlador : MonoBehaviour
 
     private void Awake()
     {
+        Espacio = new(31, 13);
         PosicionCelda = new Vector2Int(0, 0);
         TiempoUltimoMovimiento = TiempoEntreMovimientos;
         transform.position = new Vector3(0, 0, 0);
@@ -33,7 +34,8 @@ public class Controlador : MonoBehaviour
     void Start()
     {
         Debug.Log("Inicializado el controlador");
-        InstanciaMotoJugador = new Motocicleta(new Vector2Int(0, 1));
+        InstanciaMotoJugador = new Motocicleta(new Vector2Int(0, 1), Espacio);
+        InstanciaMotoJugador.AsignarCabeza(15, 6);
     }
 
     private void AdministracionDeMovimiento()

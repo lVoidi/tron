@@ -66,15 +66,9 @@ namespace Assets.Scripts
         // Generador de numeros aleatorios
         private Random rng = new Random();
 
-        public Motocicleta(Vector2Int dir)
+        public Motocicleta(Vector2Int dir, Red espacio)
         {
-            // Inicializa la red
-            Espacio = new Red(31, 13);
-
-            
-            Cabeza = Espacio.RedNodos[15, 6];
-            Cabeza.esCabeza = true;
-
+            Espacio = espacio;
             // Inicializa la estela
             Estela = new LinkedList<Nodo>();
 
@@ -86,6 +80,12 @@ namespace Assets.Scripts
 
             // Inicializa la pila de poderes
             poderes = new PilaPoderes();
+        }
+
+        public void AsignarCabeza(int x, int y)
+        {
+            Cabeza = Espacio.RedNodos[x, y];
+            Cabeza.esCabeza = true;
         }
 
         public void ComprobarCabeza()
