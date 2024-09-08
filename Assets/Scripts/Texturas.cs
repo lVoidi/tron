@@ -3,6 +3,7 @@ Clase que contiene las texturas de los objetos
 */
 using System.Collections;
 using System.Collections.Generic;
+using TMPro;
 using UnityEngine;
 
 public class Texturas : MonoBehaviour
@@ -16,6 +17,15 @@ public class Texturas : MonoBehaviour
     public GameObject CombustibleItem;
     public GameObject EstelaItem;
     public GameObject BombaItem;
+
+    // Contadores de los objetos 
+    public TextMeshProUGUI ContadorVelocidad;
+    public TextMeshProUGUI ContadorEscudo;
+    public TextMeshProUGUI ContadorCombustible;
+    public TextMeshProUGUI ContadorEstela;
+    public TextMeshProUGUI ContadorBomba;
+    public TextMeshProUGUI Estadisticas;
+
     private void Awake()
     {
         if (instancia == null)

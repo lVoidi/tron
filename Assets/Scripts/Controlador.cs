@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using Assets.Scripts;
 using Unity.VisualScripting;
+using TMPro;
 
 public class Controlador : MonoBehaviour
 {
@@ -14,6 +15,7 @@ public class Controlador : MonoBehaviour
 
     // Posición de la celda en la que se encuentra la motocicleta
     public Vector2Int PosicionCelda;
+    public Vector2Int PosicionNodo;
     public Nodo Cabeza;
 
     // Tiempo entre movimientos
@@ -88,53 +90,53 @@ public class Controlador : MonoBehaviour
         // Si el tiempo desde el último movimiento es mayor al tiempo entre movimientos
         if (TiempoUltimoMovimiento >= TiempoEntreMovimientos)
         {
-            // Mueve la motocicleta dentro de la red
-            bool MovimientoExitoso = InstanciaMotoJugador.Mover();
-
-            // Muestra información de la motocicleta
-            Debug.Log($"{InstanciaMotoJugador.combustible}");
-            Debug.Log($"x: {InstanciaMotoJugador.direccion.x}");
-            Debug.Log($"y: {InstanciaMotoJugador.direccion.y}");
-
-            // Si el movimiento no fue exitoso y la motocicleta no está viva, se termina el juego
-            if (!MovimientoExitoso && !InstanciaMotoJugador.estaVivo)
-            {
-                Debug.Log("Perdiste");
-                return;
-            }
+            
             // Actualiza la posición de la motocicleta en la clase Controlador
             PosicionCelda.x += (int)InstanciaMotoJugador.direccion.x;
             PosicionCelda.y += (int)InstanciaMotoJugador.direccion.y;
 
             // Simular espacio toroidal para 31 de largo y 13 de ancho
-            if (PosicionCelda.x < -31/2)
+            if (PosicionCelda.x < -31 / 2)
             {
-                PosicionCelda.x = 31/2;
+                PosicionCelda.x = 31 / 2;
             }
-            else if (PosicionCelda.x > 31/2)
+            else if (PosicionCelda.x > 31 / 2)
             {
-                PosicionCelda.x = -31/2;
-            } else if (PosicionCelda.y < -13/2)
-            {
-                PosicionCelda.y = 13/2;
+                PosicionCelda.x = -31 / 2;
             }
-            else if (PosicionCelda.y > 13/2)
+            else if (PosicionCelda.y < -13 / 2)
             {
-                PosicionCelda.y = -13/2;
+                PosicionCelda.y = 13 / 2;
+            }
+            else if (PosicionCelda.y > 13 / 2)
+            {
+                PosicionCelda.y = -13 / 2;
             }
 
+            // Mueve la motocicleta dentro de la red
+            bool MovimientoExitoso = InstanciaMotoJugador.Mover(PosicionCelda);
+            if (!MovimientoExitoso && !InstanciaMotoJugador.estaVivo)
+            {
+                return;
+            }
             // Mueve la motocicleta en la escena
             transform.position = new Vector3(PosicionCelda.x, PosicionCelda.y, 1);
 
             Vector2Int dir = new Vector2Int(InstanciaMotoJugador.direccion.x, InstanciaMotoJugador.direccion.y);
             transform.eulerAngles = new Vector3(0, 0, ObtenerAnguloAPartirDeVectorDireccion(dir) - 90);
+            // Si el movimiento no fue exitoso y la motocicleta no está viva, se termina el juego
+            
+            
             // Disminuye el combustible de la motocicleta en uno
             InstanciaMotoJugador.combustible--;
 
             // Reinicia el tiempo desde el último movimiento
             TiempoUltimoMovimiento -= TiempoEntreMovimientos;
 
-            Cabeza = InstanciaMotoJugador.Cabeza.nodo;
+            Cabeza = InstanciaMotoJugador.Cabeza;
+
+            // Actualiza la velocidad de la motocicleta
+            //TiempoEntreMovimientos = ( 10 - InstanciaMotoJugador.velocidad )/25;
         }
     }
 
@@ -148,11 +150,35 @@ public class Controlador : MonoBehaviour
         return anguloObtenidoAPartirDeCalculo;
     }
 
+    public void ActualizarEstadisticas()
+    {
+        // Obtiene el contador de cada item
+        TextMeshProUGUI ContadorVelocidad = Texturas.instancia.ContadorVelocidad;
+        TextMeshProUGUI ContadorEscudo = Texturas.instancia.ContadorEscudo;
+        TextMeshProUGUI ContadorGasolina = Texturas.instancia.ContadorCombustible;
+        TextMeshProUGUI ContadorEstela = Texturas.instancia.ContadorEstela;
+        TextMeshProUGUI ContadorBomba = Texturas.instancia.ContadorBomba;
+
+        TextMeshProUGUI Estadisticas = Texturas.instancia.Estadisticas;
+
+        // Actualiza el contador de cada item
+        ContadorVelocidad.text = InstanciaMotoJugador.cantidadVelocidades.ToString();
+        ContadorEscudo.text = InstanciaMotoJugador.cantidadEscudos.ToString();
+        ContadorGasolina.text = InstanciaMotoJugador.cantidadCombustibles.ToString();
+        ContadorEstela.text = InstanciaMotoJugador.cantidadEstelas.ToString();
+        ContadorBomba.text = InstanciaMotoJugador.cantidadBombas.ToString();
+
+        Estadisticas.text = $"Combustible: {InstanciaMotoJugador.combustible}\nVelocidad: {InstanciaMotoJugador.velocidad}";
+
+    }
+
     // Actualizacion de cada frame
     void Update()
     {
         AdministracionDeMovimiento();
         AdministracionDePoderes();
         AdministracionDeMovimientoDeLaMotocicletaPorCambioDeTiempo();
+        ActualizarEstadisticas();
+        PosicionNodo = new Vector2Int((int)Cabeza.id.x, (int)Cabeza.id.y);
     }
 }

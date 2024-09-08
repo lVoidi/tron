@@ -31,10 +31,10 @@ namespace Assets.Scripts
     public class Motocicleta
     {
         // Componente que representa la cabeza de la motocicleta
-        public Componente Cabeza;
+        public Nodo Cabeza;
 
         // Lista enlazada de componentes que representan la estela de la motocicleta
-        public LinkedList<Componente> Estela;
+        public LinkedList<Nodo> Estela;
 
         // Cola de items que la motocicleta puede utilizar
         public ColaItems items;
@@ -56,6 +56,13 @@ namespace Assets.Scripts
         public bool estaVivo = true;
         public bool esJugador = true;
 
+        public int cantidadEscudos = 0;
+        public int cantidadVelocidades = 0;
+        public int cantidadCombustibles = 0;
+        public int cantidadEstelas = 0;
+        public int cantidadBombas = 0;
+
+
         // Generador de numeros aleatorios
         private Random rng = new Random();
 
@@ -64,13 +71,12 @@ namespace Assets.Scripts
             // Inicializa la red
             Espacio = new Red(31, 13);
 
-            // Genera la motocicleta y asigna la cabeza
-            Cabeza = new Componente();
-            Cabeza.nodo = Espacio.RedNodos[0, 0];
-            Cabeza.nodo.esCabeza = true;
+            
+            Cabeza = Espacio.RedNodos[15, 6];
+            Cabeza.esCabeza = true;
 
             // Inicializa la estela
-            Estela = new LinkedList<Componente>();
+            Estela = new LinkedList<Nodo>();
 
             // Inicializa la direccion
             direccion = dir;
@@ -80,50 +86,91 @@ namespace Assets.Scripts
 
             // Inicializa la pila de poderes
             poderes = new PilaPoderes();
-
-            // Crea una estela inicial de tamagnoEstela
-            for (int i = 1; i < tamagnoEstela; i++)
-            {
-                Componente componente = new Componente();
-                componente.nodo = Espacio.RedNodos[i, 0];
-                componente.nodo.esObstaculo = true;
-                Estela.AddLast(componente);
-            }
-
         }
 
-        public bool Mover()
+        public void ComprobarCabeza()
+        {
+            
+            if (Cabeza.item != null)
+            {
+                Item item = Cabeza.item;
+                Cabeza.item = null;
+                items.AgregarItem(item);
+                Vector2Int PosicionAleatoriaNueva = new Vector2Int(rng.Next(2, Espacio.largo - 2), rng.Next(2, Espacio.ancho - 2));
+                if (item.nombre == "Combustible")
+                {
+                    Espacio.PosicionarObjetoEnMapa(PosicionAleatoriaNueva, Texturas.instancia.CombustibleItem);
+                    Espacio.CategorizarNodo(Texturas.instancia.CombustibleItem, PosicionAleatoriaNueva);
+                    cantidadCombustibles++;
+                }
+                else if (item.nombre == "Estela")
+                {
+                    Espacio.PosicionarObjetoEnMapa(PosicionAleatoriaNueva, Texturas.instancia.EstelaItem);
+                    Espacio.CategorizarNodo(Texturas.instancia.EstelaItem, PosicionAleatoriaNueva);
+                    cantidadEstelas++;
+                }
+                else if (item.nombre == "Bomba")
+                {
+                    Espacio.PosicionarObjetoEnMapa(PosicionAleatoriaNueva, Texturas.instancia.BombaItem);
+                    Espacio.CategorizarNodo(Texturas.instancia.BombaItem, PosicionAleatoriaNueva);
+                    cantidadBombas++;
+                }
+                Debug.Log($"Posicion: {PosicionAleatoriaNueva.x},{PosicionAleatoriaNueva.y}");
+            }
+            else if (Cabeza.poder != null)
+            {
+                Poder poder = Cabeza.poder;
+                Cabeza.poder = null;
+                poderes.AgregarPoder(poder);
+                Vector2Int PosicionAleatoriaNueva = new Vector2Int(rng.Next(2, Espacio.largo - 2), rng.Next(2, Espacio.ancho - 2));
+                if (poder.nombre == "Velocidad")
+                {
+                    Espacio.PosicionarObjetoEnMapa(PosicionAleatoriaNueva, Texturas.instancia.VelocidadPoder);
+                    Espacio.CategorizarNodo(Texturas.instancia.VelocidadPoder, PosicionAleatoriaNueva);
+                    cantidadVelocidades++;
+                }
+                else if (poder.nombre == "Escudo")
+                {
+                    Espacio.PosicionarObjetoEnMapa(PosicionAleatoriaNueva, Texturas.instancia.EscudoPoder);
+                    Espacio.CategorizarNodo(Texturas.instancia.EscudoPoder, PosicionAleatoriaNueva);
+                    cantidadEscudos++;
+                }
+            }
+        }
+
+        public bool Mover(Vector2Int pos)
         {
 
             // Analiza si el jugador sigue vivo, mediante el combustible. Si es así, va a intercambiar
             // la cabeza de la motocicleta por el nodo adyacente en la dirección de movimiento.
-            if (combustible > 0)
+            if (combustible > 0 && estaVivo)
             {
                 // Obtiene las coordenadas de la cabeza de la motocicleta actual en la matriz
-                int x = (int)Cabeza.nodo.id.x;
-                int y = (int)Cabeza.nodo.id.y;
+
+                UnityEngine.Vector3 posNueva = Espacio.CentroACoordenada(pos);
+
+                int x = (int)posNueva.x;
+                int y = (int)posNueva.y;
 
                 // Quita la cabeza de la motocicleta
-                Espacio.RedNodos[x, y].esCabeza = false;
+                Cabeza.esCabeza = false;
 
-                // Asigna la nueva cabeza de la motocicleta
-                Cabeza.nodo = Cabeza.nodo.ObtenerNodoAdyacente(direccion);
-
-                // Comprueba si la nueva cabeza de la motocicleta es un obstaculo
-                // Si es un obstaculo, la motocicleta muere
-                if (Cabeza.nodo.esObstaculo | Cabeza.nodo.esCabeza)
+                Cabeza = Espacio.RedNodos[x,y];
+                if (Cabeza.esObstaculo || Cabeza.esCabeza)
                 {
                     estaVivo = false;
                     return false;
                 }
+                ComprobarCabeza();
+                // Asigna la nueva cabeza de la motocicleta
+                Cabeza = Cabeza.ObtenerNodoAdyacente(direccion);
 
-                Cabeza.nodo.esCabeza = true;
-
-
-                // Actualiza la red de nodos. El nodo antiguo pasa de ser cabeza a parte de la estela
-                Espacio.RedNodos[x, y] = Espacio.RedNodos[x, y].ObtenerNodoAdyacente(direccion);
-
+                // Comprueba si la nueva cabeza de la motocicleta es un obstaculo
+                // Si es un obstaculo, la motocicleta muere
+                
+                Cabeza.esCabeza = true;
             }
+
             // Si la motocicleta se queda sin combustible, muere
             else
             {
@@ -131,21 +178,8 @@ namespace Assets.Scripts
                 return false;
             }
 
-            // Actualiza la estela
-            Componente nuevoComponente = new Componente();
-            nuevoComponente.nodo = Cabeza.nodo;
-            Estela.AddFirst(nuevoComponente);
-
-            // Si la estela es más grande que el tamaño de la estela, elimina el último componente
-            if (Estela.Count > tamagnoEstela)
-            {
-                Componente ultimoComponente = Estela.Last.Value;
-                ultimoComponente.nodo.esObstaculo = false;
-                Estela.RemoveLast();
-            }
             return true;
         }
-
 
 
         public void UtilizarPoder()
@@ -188,6 +222,7 @@ namespace Assets.Scripts
             if (item.nombre == "Combustible")
             {
                 combustible += rng.Next(1, 100-combustible);
+                cantidadCombustibles--;
             }
 
             // Si el item es bomba, pone un obstaculo en la dirección contraria a la que se mueve la motocicleta
@@ -195,34 +230,31 @@ namespace Assets.Scripts
             {
                 if (direccion == new Vector2Int(-1, 0))
                 {
-                    Cabeza.nodo.Derecha.esObstaculo = true;
+                    Cabeza.Derecha.esObstaculo = true;
                 } else if (direccion == new Vector2Int(1, 0))
                 {
-                    Cabeza.nodo.Izquierda.esObstaculo = true;
+                    Cabeza.Izquierda.esObstaculo = true;
                 }
                 else if (direccion == new Vector2Int(0, -1))
                 {
-                    Cabeza.nodo.Arriba.esObstaculo = true;
+                    Cabeza.Arriba.esObstaculo = true;
                 }
                 else if (direccion == new Vector2Int(0, 1))
                 {
-                    Cabeza.nodo.Abajo.esObstaculo = true;
+                    Cabeza.Abajo.esObstaculo = true;
                 }
+                cantidadBombas--;
             }
 
             // Si el item es estela, aumenta el tamaño de la estela de la motocicleta en 1
             else if (item.nombre == "Estela")
             {
                 tamagnoEstela++;
+                cantidadEstelas--;
             }
         }
     }
 
-
-    public class Componente
-    {
-        public Nodo nodo;
-    }
 
     public class PilaPoderes
     {

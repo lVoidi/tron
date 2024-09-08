@@ -36,61 +36,76 @@ namespace Assets.Scripts
 
         public Red(int espacios_x, int espacios_y)
         {
-            // Inicializa la red de nodos
 
             largo = espacios_x;
             ancho = espacios_y;
 
-            RedNodos = new Nodo[espacios_x, espacios_y];
-            for (int i = 0; i < espacios_x; i++)
-            {
-                for (int j = 0; j < espacios_y; j++)
-                {
-                    Nodo nodo = new Nodo();
-                    nodo.id = new Vector2Int(i, j);
-                    RedNodos[i, j] = nodo;
-                }
-            }
-
-            // Conecta los nodos exteriores para simular un espacio toroidal
-            for (int x = 0; x < espacios_x; x ++)
-            {
-                for (int y = 0; y < espacios_y; y++)
-                {
-                    if (x > 0)
-                    {
-                        RedNodos[x, y].Izquierda = RedNodos[x - 1, y];
-                    } else
-                    {
-                        RedNodos[x, y].Izquierda = RedNodos[espacios_x - 1, y];
-                    }
-                    if (x < espacios_x - 1)
-                    {
-                        RedNodos[x, y].Derecha = RedNodos[x + 1, y];
-                    } else
-                    {
-                        RedNodos[x, y].Derecha = RedNodos[0, y];
-                    }
-                    if (y > 0)
-                    {
-                        RedNodos[x, y].Abajo = RedNodos[x, y - 1];
-                    } else
-                    {
-                        RedNodos[x, y].Abajo = RedNodos[x, espacios_y - 1];
-                    }
-                    if (y < espacios_y - 1)
-                    {
-                        RedNodos[x, y].Arriba = RedNodos[x, y + 1];
-                    } else
-                    {
-                        RedNodos[x, y].Arriba = RedNodos[x, 0];
-                    }
-                }
-            }
-
+            RedNodos = new Nodo[largo, ancho];
+            GenerarNodos();
+            ActualizarConexionesNodos();
             GenerarObjetos();
 
         }
+
+        public void GenerarNodos()
+        {
+            // Genera los nodos de la red
+            for (int i = 0; i < largo; i++)
+            {
+                for (int j = 0; j < ancho; j++)
+                {
+                    Nodo nodo = new();
+                    nodo.id = new Vector2Int(i, j);
+                    RedNodos[i, ancho-j-1] = nodo;
+                }
+            }
+        }
+
+
+        public void ActualizarConexionesNodos()
+        {
+            // Conecta los nodos exteriores para simular un espacio toroidal
+            for (int x = 0; x < largo; x++)
+            {
+                for (int y = 0; y < ancho; y++)
+                {
+                    Nodo nodo = RedNodos[x, y];
+                    if (x > 0)
+                    {
+                        nodo.Izquierda = RedNodos[x - 1, y];
+                    }
+                    else
+                    {
+                        nodo.Izquierda = RedNodos[largo - 1, y];
+                    }
+                    if (x < ancho - 1)
+                    {
+                        nodo.Derecha = RedNodos[x + 1, y];
+                    }
+                    else
+                    {
+                        nodo.Derecha = RedNodos[0, y];
+                    }
+                    if (y > 0)
+                    {
+                        nodo.Abajo = RedNodos[x, y - 1];
+                    }
+                    else
+                    {
+                        nodo.Abajo = RedNodos[x, ancho - 1];
+                    }
+                    if (y < ancho - 1)
+                    {
+                        nodo.Arriba = RedNodos[x, y + 1];
+                    }
+                    else
+                    {
+                        nodo.Arriba = RedNodos[x, 0];
+                    }
+                }
+            }
+        }
+
         
         public void GenerarObjetos()
         {
@@ -98,61 +113,69 @@ namespace Assets.Scripts
             foreach (GameObject objeto in objetos)
             {
                 Vector2Int coord = new Vector2Int(UnityEngine.Random.Range(0, largo), UnityEngine.Random.Range(0, ancho));
-                while (RedNodos[coord.x, coord.y].esObstaculo || RedNodos[coord.x, coord.y].item != null)
+                Nodo nodo = RedNodos[coord.x, coord.y];
+                while (nodo.esObstaculo || nodo.item != null || nodo.poder != null)
                 {
                     coord = new Vector2Int(UnityEngine.Random.Range(0, largo), UnityEngine.Random.Range(0, ancho));
                 }
                 PosicionarObjetoEnMapa(coord, objeto);
                 CategorizarNodo(objeto, coord);
+                Debug.Log($"Objeto {objeto.name} en {coord.x},{coord.y}");
+
             }
         }
+
 
         public void CategorizarNodo(GameObject objeto, Vector2Int coord)
         {
 
+            Nodo nodo = RedNodos[coord.x, coord.y];
+
             if (objeto == Texturas.instancia.EscudoPoder)
             {
-                RedNodos[coord.x, coord.y].poder = new Poder
+                nodo.poder = new Poder
                 {
                     nombre = "Escudo",
                 };
             }
             else if (objeto == Texturas.instancia.VelocidadPoder)
             {
-                RedNodos[coord.x, coord.y].poder = new Poder
+                nodo.poder = new Poder
                 {
                     nombre = "Velocidad",
                 };
             }
             else if (objeto == Texturas.instancia.BombaItem)
             {
-                RedNodos[coord.x, coord.y].item = new Item
+                nodo.item = new Item
                 {
                     nombre = "Bomba",
                 };
             }
             else if (objeto == Texturas.instancia.CombustibleItem)
             {
-                RedNodos[coord.x, coord.y].item = new Item
+                nodo.item = new Item
                 {
                     nombre = "Combustible",
                 };
             }
             else if (objeto == Texturas.instancia.EstelaItem)
             {
-                RedNodos[coord.x, coord.y].item = new Item
+                nodo.item = new Item
                 {
                     nombre = "Estela",
                 };
 
             }
+            
         }
 
         public void PosicionarObjetoEnMapa(Vector2Int coord, GameObject objeto)
         {
+            Nodo nodo = ObtenerNodo(coord);
+            nodo.id = coord;
             objeto.transform.position = CoordenadaACentro(coord);
         }
-
 
         // Función que toma una coordenada y le mueve el centro, ya que en unity 
         // el centro de la pantalla está en el medio y no en una esquina
@@ -161,6 +184,12 @@ namespace Assets.Scripts
         {
             return new Vector3(coord.x - largo / 2, coord.y - ancho / 2, 10);
         }
+
+        public Vector3 CentroACoordenada(Vector2Int centro)
+        {
+            return new Vector3(centro.x + largo / 2, centro.y + ancho / 2, 10);
+        }
+
 
         public Nodo ObtenerNodo(Vector2Int id)
         {
@@ -191,19 +220,18 @@ namespace Assets.Scripts
             {
                 return Derecha;
             }
-            if (dir.x == -1)
+            else if (dir.x == -1)
             {
                 return Izquierda;
             }
-            if (dir.y == 1)
+            else if (dir.y == 1)
             {
                 return Arriba;
             }
-            if (dir.y == -1)
+            else
             {
                 return Abajo;
             }
-            return null;
 
         }
     }
