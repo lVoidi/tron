@@ -182,5 +182,6 @@ public class Controlador : MonoBehaviour
         AdministracionDeMovimientoDeLaMotocicletaPorCambioDeTiempo();
         ActualizarEstadisticas();
         PosicionNodo = new Vector2Int((int)Cabeza.id.x, (int)Cabeza.id.y);
+        TiempoEntreMovimientos = 0.05f * (12 - InstanciaMotoJugador.velocidad);
     }
 }

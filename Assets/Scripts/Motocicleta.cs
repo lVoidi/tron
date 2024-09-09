@@ -138,6 +138,55 @@ namespace Assets.Scripts
             }
         }
 
+        public void Esquivar()
+        {
+            // Los bots van a esquivar los obstaculos y la estela de la motocicleta. Para esto, cambia el vector direccion
+            if (esJugador)
+            {
+                return;
+            }
+            int MakeDecision = rng.Next(0, 5);
+            if (MakeDecision == 0)
+            {
+                return;
+            }
+
+            if (Cabeza.ObtenerNodoAdyacente(direccion).esObstaculo)
+            {
+                
+                if (direccion == new Vector2Int(-1, 0) || direccion == new Vector2Int(1, 0))
+                {
+                    int Decision = rng.Next(0, 2);
+                    if (Decision == 0)
+                    {
+                        direccion = new Vector2Int(0, 1);
+                    }
+                    else
+                    {
+                        direccion = new Vector2Int(0, -1);
+                    }
+                    return;
+                }
+
+                // Si va hacia arriba o hacia abajo, va a elegir aleatoriamente si ir hacia la izquierda o a la derecha
+                if (direccion == new Vector2Int(0, -1) || direccion == new Vector2Int(0, 1))
+                {
+                    int Decision = rng.Next(0, 2);
+                    if (Decision == 0)
+                    {
+                        direccion = new Vector2Int(1, 0);
+                    }
+                    else
+                    {
+                        direccion = new Vector2Int(-1, 0);
+                    }
+                    return;
+                }
+
+            }
+
+        }
+
         public bool Mover(Vector2Int pos)
         {
 
@@ -162,6 +211,7 @@ namespace Assets.Scripts
                     return false;
                 }
                 ComprobarCabeza();
+                Esquivar();
                 // Asigna la nueva cabeza de la motocicleta
                 Cabeza = Cabeza.ObtenerNodoAdyacente(direccion);
 
@@ -197,13 +247,20 @@ namespace Assets.Scripts
             if (poder.nombre == "Inmunidad")
             {
                 esInmune = true;
+                cantidadEscudos--;
             }
 
 
             // Si el poder es velocidad, aumenta la velocidad de la 
             if (poder.nombre == "Velocidad")
             {
-                velocidad += rng.Next(1, 10-velocidad);
+                int nuevaVelocidad = velocidad + rng.Next(1, 11 - velocidad);
+                if (nuevaVelocidad > 10)
+                {
+                    nuevaVelocidad = 10;
+                }
+                velocidad = nuevaVelocidad;
+                cantidadVelocidades--;
             }
         }
 
@@ -292,36 +349,28 @@ namespace Assets.Scripts
     public class ColaItems
     {
         // Arreglo de items
-        public Item[] items;
-        public int cantidadItems = 0;
-        public int maxItems = 10;
+        public LinkedList<Item> items;
 
         public ColaItems()
         {
-            items = new Item[maxItems];
+            items = new();
         }
 
         // Agrega un item a la cola
         public void AgregarItem(Item item)
         {
-            if (cantidadItems < maxItems)
-            {
-                items[cantidadItems] = item;
-                cantidadItems++;
-            }
+
+            items.AddLast(item);
+            
         }
 
         // Saca un item de la cola
         public Item SacarItem()
         {
-            if (cantidadItems > 0)
+            if (items.Count > 0)
             {
-                Item item = items[0];
-                for (int i = 0; i < cantidadItems - 1; i++)
-                {
-                    items[i] = items[i + 1];
-                }
-                cantidadItems--;
+                Item item = items.First.Value;
+                items.RemoveFirst();
                 return item;
             }
             return null;
