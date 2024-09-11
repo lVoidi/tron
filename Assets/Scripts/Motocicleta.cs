@@ -66,6 +66,8 @@ namespace Assets.Scripts
         // Generador de numeros aleatorios
         private Random rng = new Random();
 
+        public ControladorAudio controladorAudio;
+
         public Motocicleta(Vector2Int dir, Red espacio)
         {
             Espacio = espacio;
@@ -80,6 +82,7 @@ namespace Assets.Scripts
 
             // Inicializa la pila de poderes
             poderes = new PilaPoderes();
+            controladorAudio = GameObject.Find("ManejadorAudio").GetComponent<ControladorAudio>();
         }
 
         public void AsignarCabeza(int x, int y)
@@ -115,6 +118,8 @@ namespace Assets.Scripts
                     Espacio.CategorizarNodo(Texturas.instancia.BombaItem, PosicionAleatoriaNueva);
                     cantidadBombas++;
                 }
+                controladorAudio.ReproducirSonido(controladorAudio.RecogerItemGenerico);
+
                 Debug.Log($"Posicion: {PosicionAleatoriaNueva.x},{PosicionAleatoriaNueva.y}");
             }
             else if (Cabeza.poder != null)
@@ -135,6 +140,8 @@ namespace Assets.Scripts
                     Espacio.CategorizarNodo(Texturas.instancia.EscudoPoder, PosicionAleatoriaNueva);
                     cantidadEscudos++;
                 }
+                controladorAudio.ReproducirSonido(controladorAudio.RecogerPoderGenerico);
+
             }
         }
 
@@ -207,6 +214,7 @@ namespace Assets.Scripts
                 Cabeza = Espacio.RedNodos[x,y];
                 if (Cabeza.esObstaculo || Cabeza.esCabeza)
                 {
+                    controladorAudio.ReproducirSonido(controladorAudio.ExplosionJugador);
                     estaVivo = false;
                     return false;
                 }
@@ -224,6 +232,17 @@ namespace Assets.Scripts
             // Si la motocicleta se queda sin combustible, muere
             else
             {
+                if (estaVivo)
+                {
+                    if (esJugador)
+                    {
+                        controladorAudio.PararTodosLosSondos();
+                    }
+
+                    controladorAudio.ReproducirSonido(controladorAudio.ExplosionJugador);
+
+                    // Para todos los sonidos del controlador
+                }
                 estaVivo = false;
                 return false;
             }
@@ -248,6 +267,7 @@ namespace Assets.Scripts
             {
                 esInmune = true;
                 cantidadEscudos--;
+                controladorAudio.ReproducirSonido(controladorAudio.UtilizarEscudo);
             }
 
 
@@ -261,6 +281,8 @@ namespace Assets.Scripts
                 }
                 velocidad = nuevaVelocidad;
                 cantidadVelocidades--;
+                controladorAudio.ReproducirSonido(controladorAudio.UtilizarAumentoVelocidad);
+                controladorAudio.ReproducirSonido(controladorAudio.SonidoFondoVelocidad);
             }
         }
 
@@ -280,6 +302,7 @@ namespace Assets.Scripts
             {
                 combustible += rng.Next(1, 100-combustible);
                 cantidadCombustibles--;
+                controladorAudio.ReproducirSonido(controladorAudio.UtilizarGasolina);
             }
 
             // Si el item es bomba, pone un obstaculo en la dirección contraria a la que se mueve la motocicleta
@@ -301,6 +324,7 @@ namespace Assets.Scripts
                     Cabeza.Abajo.esObstaculo = true;
                 }
                 cantidadBombas--;
+                controladorAudio.ReproducirSonido(controladorAudio.UtilizarBomba);
             }
 
             // Si el item es estela, aumenta el tamaño de la estela de la motocicleta en 1
@@ -308,6 +332,7 @@ namespace Assets.Scripts
             {
                 tamagnoEstela++;
                 cantidadEstelas--;
+                controladorAudio.ReproducirSonido(controladorAudio.UtilizarAumentoEstela);
             }
         }
     }

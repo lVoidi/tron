@@ -22,9 +22,12 @@ public class Controlador : MonoBehaviour
     public float TiempoUltimoMovimiento;
     public float TiempoEntreMovimientos = 0.2f;
 
+    public ControladorAudio controladorAudio;
+
 
     private void Awake()
     {
+        controladorAudio = GameObject.Find("ManejadorAudio").GetComponent<ControladorAudio>();
         Espacio = new(31, 13);
         PosicionCelda = new Vector2Int(0, 0);
         TiempoUltimoMovimiento = TiempoEntreMovimientos;
@@ -182,6 +185,6 @@ public class Controlador : MonoBehaviour
         AdministracionDeMovimientoDeLaMotocicletaPorCambioDeTiempo();
         ActualizarEstadisticas();
         PosicionNodo = new Vector2Int((int)Cabeza.id.x, (int)Cabeza.id.y);
-        TiempoEntreMovimientos = 0.05f * (12 - InstanciaMotoJugador.velocidad);
+        TiempoEntreMovimientos = 0.02f * (12 - InstanciaMotoJugador.velocidad);
     }
 }
