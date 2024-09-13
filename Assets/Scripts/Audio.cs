@@ -30,6 +30,11 @@ public class ControladorAudio : MonoBehaviour
         FuenteEfectos.volume = 0.5f;
     }
 
+    public void ReproducirMusica(AudioClip musica)
+    {
+        FuenteMusica.PlayOneShot(musica);
+    }
+
     public void ReproducirSonido(AudioClip sonido)
     {
         FuenteEfectos.PlayOneShot(sonido);
@@ -38,6 +43,11 @@ public class ControladorAudio : MonoBehaviour
     public void PararTodosLosSondos()
     {
         FuenteMusica.Stop();
+        FuenteEfectos.Stop();
+    }
+
+    public void PararSonidoEfectos()
+    {
         FuenteEfectos.Stop();
     }
 }

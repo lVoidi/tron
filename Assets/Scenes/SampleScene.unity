@@ -9614,9 +9614,7 @@ MonoBehaviour:
   UtilizarEscudo: {fileID: 8300000, guid: ca358772d7d57e54e80fc0ee4fb74047, type: 3}
   UtilizarAumentoEstela: {fileID: 8300000, guid: 55b61d339dfc9c445b8d75499b955b94, type: 3}
   UtilizarAumentoVelocidad: {fileID: 8300000, guid: 3e3e45aa43764264f915b45a5e72ead4, type: 3}
-  SonidoFondoVelocidad: {fileID: 0}
-  GiroPositivo: {fileID: 8300000, guid: fd5825e0420157341b62ac43a5b54c84, type: 3}
-  GiroNegativo: {fileID: 8300000, guid: 199d0d82b340a394594c17c6f8e5630d, type: 3}
+  SonidoFondoVelocidad: {fileID: 8300000, guid: 0c49544443f34e0458be0788b150a527, type: 3}
   RecogerItemGenerico: {fileID: 8300000, guid: b3e7aa26435c8884ea5d99f656266efb, type: 3}
   RecogerPoderGenerico: {fileID: 8300000, guid: 1cfeb218d60012f4889c094e10f9b101, type: 3}
 --- !u!1 &763528490
@@ -9937,7 +9935,7 @@ SpriteRenderer:
   m_SortingLayerID: -946469537
   m_SortingLayer: 2
   m_SortingOrder: 0
-  m_Sprite: {fileID: 21300000, guid: 6e71e0aa51575ac42b40e4e913568c28, type: 3}
+  m_Sprite: {fileID: 21300000, guid: 35792b03d97c2bf43b62563824ed4994, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
@@ -10021,7 +10019,7 @@ SpriteRenderer:
   m_SortingLayerID: -946469537
   m_SortingLayer: 2
   m_SortingOrder: 0
-  m_Sprite: {fileID: 21300000, guid: 6e71e0aa51575ac42b40e4e913568c28, type: 3}
+  m_Sprite: {fileID: 21300000, guid: 35792b03d97c2bf43b62563824ed4994, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
@@ -11251,6 +11249,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   SpriteMotocicleta: {fileID: 0}
+  EstelaGenerica: {fileID: 21300000, guid: 6e71e0aa51575ac42b40e4e913568c28, type: 3}
   BotRojo: {fileID: 0}
   BotAzul: {fileID: 0}
   BotAmarillo: {fileID: 0}
@@ -11266,6 +11265,7 @@ MonoBehaviour:
   ContadorEstela: {fileID: 987370872}
   ContadorBomba: {fileID: 1758919241}
   Estadisticas: {fileID: 1084814887}
+  GifExplosion: {fileID: 0}
 --- !u!1 &1519697689
 GameObject:
   m_ObjectHideFlags: 0

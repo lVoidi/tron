@@ -11,6 +11,7 @@ public class Texturas : MonoBehaviour
 
     public static Texturas instancia;
     public Sprite SpriteMotocicleta;
+    public Sprite EstelaGenerica;
 
     // Bots que simulan jugadores
     public Sprite BotRojo; 
@@ -31,6 +32,8 @@ public class Texturas : MonoBehaviour
     public TextMeshProUGUI ContadorEstela;
     public TextMeshProUGUI ContadorBomba;
     public TextMeshProUGUI Estadisticas;
+
+    public Sprite GifExplosion;
 
     private void Awake()
     {

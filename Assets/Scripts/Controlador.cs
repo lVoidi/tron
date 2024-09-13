@@ -95,7 +95,7 @@ public class Controlador : MonoBehaviour
         // Si el tiempo desde el último movimiento es mayor al tiempo entre movimientos
         if (TiempoUltimoMovimiento >= TiempoEntreMovimientos)
         {
-            
+            Vector2Int PosicionEstela = new Vector2Int(PosicionCelda.x, PosicionCelda.y);
             // Actualiza la posición de la motocicleta en la clase Controlador
             PosicionCelda.x += (int)InstanciaMotoJugador.direccion.x;
             PosicionCelda.y += (int)InstanciaMotoJugador.direccion.y;
@@ -117,13 +117,14 @@ public class Controlador : MonoBehaviour
             {
                 PosicionCelda.y = -13 / 2;
             }
-
             // Mueve la motocicleta dentro de la red
             bool MovimientoExitoso = InstanciaMotoJugador.Mover(PosicionCelda);
             if (!MovimientoExitoso && !InstanciaMotoJugador.estaVivo)
             {
                 return;
             }
+
+            InstanciaMotoJugador.ActualizarEstela(PosicionEstela);
             // Mueve la motocicleta en la escena
             transform.position = new Vector3(PosicionCelda.x, PosicionCelda.y, 1);
 
@@ -139,7 +140,7 @@ public class Controlador : MonoBehaviour
             TiempoUltimoMovimiento -= TiempoEntreMovimientos;
 
             Cabeza = InstanciaMotoJugador.Cabeza;
-
+            
             // Actualiza la velocidad de la motocicleta
             //TiempoEntreMovimientos = ( 10 - InstanciaMotoJugador.velocidad )/25;
         }
@@ -177,6 +178,26 @@ public class Controlador : MonoBehaviour
 
     }
 
+    private void ActualizarVariablesInternas()
+    {
+        PosicionNodo = new Vector2Int((int)Cabeza.id.x, (int)Cabeza.id.y);
+        TiempoEntreMovimientos = 0.035f * (12 - InstanciaMotoJugador.velocidad);
+        InstanciaMotoJugador.TiempoDesdeUsoVelocidad += Time.deltaTime;
+    }
+
+    public void MostrarExplosionEn(Vector2Int posicion)
+    {
+        GameObject ObjetoTemporal = new GameObject();
+        ObjetoTemporal.transform.position = new Vector3(posicion.x, posicion.y, 10);
+        ObjetoTemporal.AddComponent<SpriteRenderer>().sprite = Texturas.instancia.GifExplosion;
+        transform.position = new Vector3(-1000, 0, -10);
+    }
+
+    private void DetectarMuerte()
+    {
+        MostrarExplosionEn(PosicionCelda);
+    }
+
     // Actualizacion de cada frame
     void Update()
     {
@@ -184,7 +205,6 @@ public class Controlador : MonoBehaviour
         AdministracionDePoderes();
         AdministracionDeMovimientoDeLaMotocicletaPorCambioDeTiempo();
         ActualizarEstadisticas();
-        PosicionNodo = new Vector2Int((int)Cabeza.id.x, (int)Cabeza.id.y);
-        TiempoEntreMovimientos = 0.02f * (12 - InstanciaMotoJugador.velocidad);
+        ActualizarVariablesInternas();
     }
 }

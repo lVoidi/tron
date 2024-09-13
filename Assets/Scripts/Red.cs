@@ -205,6 +205,8 @@ namespace Assets.Scripts
         public Nodo Izquierda = null;
         public Nodo Derecha = null;
 
+        public GameObject ObjectoAsignado = null;
+
         // Propiedades del nodo
         public bool esObstaculo = false;
         public bool esCabeza = false;

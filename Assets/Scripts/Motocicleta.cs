@@ -26,6 +26,9 @@ using System.Text;
 using System.Threading.Tasks;
 
 using Random = System.Random;
+using Quaternion = UnityEngine.Quaternion;
+using Vector3 = UnityEngine.Vector3;
+using static UnityEditor.PlayerSettings;
 namespace Assets.Scripts
 {
     public class Motocicleta
@@ -62,6 +65,8 @@ namespace Assets.Scripts
         public int cantidadEstelas = 0;
         public int cantidadBombas = 0;
 
+        public float TiempoDesdeUsoVelocidad = 0;
+        public float TiempoLimiteVelocidad = 5f;
 
         // Generador de numeros aleatorios
         private Random rng = new Random();
@@ -83,6 +88,14 @@ namespace Assets.Scripts
             // Inicializa la pila de poderes
             poderes = new PilaPoderes();
             controladorAudio = GameObject.Find("ManejadorAudio").GetComponent<ControladorAudio>();
+
+            // Crea estela inicial
+            for (int i = 0; i < tamagnoEstela; i++)
+            {
+                Nodo nodo = Espacio.RedNodos[15, 6];
+                nodo.esCabeza = false;
+                Estela.AddLast(nodo);
+            }
         }
 
         public void AsignarCabeza(int x, int y)
@@ -142,6 +155,35 @@ namespace Assets.Scripts
                 }
                 controladorAudio.ReproducirSonido(controladorAudio.RecogerPoderGenerico);
 
+            }
+            
+            
+        }
+
+        public void ActualizarEstela(Vector2Int pos)
+        {
+            Vector3 posicionEspacio = Espacio.CentroACoordenada(pos);
+            Nodo ultimaEstela = Espacio.RedNodos[(int) posicionEspacio.x, (int) posicionEspacio.y];
+            ultimaEstela.id = new Vector2Int((int)pos.x, (int)pos.y);
+            Estela.AddFirst(ultimaEstela);
+            ultimaEstela.id = Estela.Last.Value.id;
+            ultimaEstela.esCabeza = false;
+            ultimaEstela.esObstaculo = true;
+            ultimaEstela.ObjectoAsignado = new GameObject();
+            ultimaEstela.ObjectoAsignado.AddComponent<SpriteRenderer>();
+            ultimaEstela.ObjectoAsignado.GetComponent<SpriteRenderer>().sprite = Texturas.instancia.EstelaGenerica;
+            ultimaEstela.ObjectoAsignado.transform.localScale = new Vector3(.3f, .3f, .3f);
+            ultimaEstela.ObjectoAsignado.transform.position = new Vector3(pos.x, pos.y, 10);
+            ultimaEstela.ObjectoAsignado.GetComponent<SpriteRenderer>().sortingOrder = 1;
+
+
+            if (Estela.Count > tamagnoEstela)
+            {
+                ultimaEstela = Estela.Last.Value;
+                ultimaEstela.esCabeza = false;
+                ultimaEstela.esObstaculo = false;
+                Estela.RemoveLast();
+                GameObject.Destroy(ultimaEstela.ObjectoAsignado);
             }
         }
 
@@ -203,6 +245,15 @@ namespace Assets.Scripts
             {
                 // Obtiene las coordenadas de la cabeza de la motocicleta actual en la matriz
 
+                
+                if (TiempoDesdeUsoVelocidad >= TiempoLimiteVelocidad)
+                {
+                    velocidad = 5;
+                    controladorAudio.PararSonidoEfectos();
+                    TiempoDesdeUsoVelocidad = 0;
+                }
+
+
                 UnityEngine.Vector3 posNueva = Espacio.CentroACoordenada(pos);
 
                 int x = (int)posNueva.x;
@@ -227,6 +278,8 @@ namespace Assets.Scripts
                 // Si es un obstaculo, la motocicleta muere
                 
                 Cabeza.esCabeza = true;
+                
+
             }
 
             // Si la motocicleta se queda sin combustible, muere
@@ -263,7 +316,7 @@ namespace Assets.Scripts
             }
 
             // Si el poder es inmunidad, la motocicleta se vuelve inmune
-            if (poder.nombre == "Inmunidad")
+            if (poder.nombre == "Escudo")
             {
                 esInmune = true;
                 cantidadEscudos--;
@@ -280,9 +333,10 @@ namespace Assets.Scripts
                     nuevaVelocidad = 10;
                 }
                 velocidad = nuevaVelocidad;
+                TiempoLimiteVelocidad = (float) rng.Next(3, 7);
                 cantidadVelocidades--;
                 controladorAudio.ReproducirSonido(controladorAudio.UtilizarAumentoVelocidad);
-                controladorAudio.ReproducirSonido(controladorAudio.SonidoFondoVelocidad);
+                controladorAudio.ReproducirMusica(controladorAudio.SonidoFondoVelocidad);
             }
         }
 
