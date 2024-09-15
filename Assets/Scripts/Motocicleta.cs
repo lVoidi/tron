@@ -362,18 +362,18 @@ namespace Assets.Scripts
             // Si el item es bomba, pone un obstaculo en la dirección contraria a la que se mueve la motocicleta
             else if (item.nombre == "Bomba")
             {
-                if (direccion == new Vector2Int(-1, 0))
+                if (direccion.x == -1)
                 {
                     Cabeza.Derecha.esObstaculo = true;
-                } else if (direccion == new Vector2Int(1, 0))
+                } else if (direccion.x == 1)
                 {
                     Cabeza.Izquierda.esObstaculo = true;
                 }
-                else if (direccion == new Vector2Int(0, -1))
+                else if (direccion.y == -1)
                 {
                     Cabeza.Arriba.esObstaculo = true;
                 }
-                else if (direccion == new Vector2Int(0, 1))
+                else if (direccion.y == 1)
                 {
                     Cabeza.Abajo.esObstaculo = true;
                 }
