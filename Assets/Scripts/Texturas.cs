@@ -33,7 +33,11 @@ public class Texturas : MonoBehaviour
     public TextMeshProUGUI ContadorBomba;
     public TextMeshProUGUI Estadisticas;
 
-    public Sprite GifExplosion;
+    public ParticleSystem Explosion;
+    // 0.954 / 1.465 / 1
+    public Sprite BombaNuclearTiradaPorElEstadoDeIsraelEnEspacioCivilPalestino;
+    // 1.4419 / 1.4419 / 1.4419
+    public Sprite BombaRoja;
 
     private void Awake()
     {

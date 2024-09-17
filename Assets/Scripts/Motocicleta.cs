@@ -67,6 +67,11 @@ namespace Assets.Scripts
 
         public float TiempoDesdeUsoVelocidad = 0;
         public float TiempoLimiteVelocidad = 5f;
+        public float TiempoDesdeUsoInmunidad = 0;
+        public float TiempoDesdeUsoBomba = 0;
+
+        public GameObject bomba;
+        public Nodo nodoBomba;
 
         // Generador de numeros aleatorios
         private Random rng = new Random();
@@ -253,6 +258,20 @@ namespace Assets.Scripts
                     TiempoDesdeUsoVelocidad = 0;
                 }
 
+                if (TiempoDesdeUsoInmunidad >= 5)
+                {
+                    esInmune = false;
+                    TiempoDesdeUsoInmunidad = 0;
+                }
+
+                if (TiempoDesdeUsoBomba >= 30)
+                {
+                    if (bomba != null)
+                    {
+                        GameObject.Destroy(bomba);
+                    }
+                    // Explota la bomba
+                }
 
                 UnityEngine.Vector3 posNueva = Espacio.CentroACoordenada(pos);
 
@@ -265,8 +284,19 @@ namespace Assets.Scripts
                 Cabeza = Espacio.RedNodos[x,y];
                 if (Cabeza.esObstaculo || Cabeza.esCabeza)
                 {
-                    controladorAudio.ReproducirSonido(controladorAudio.ExplosionJugador);
+                    // Va a generar una explosion en la cabeza y en cada posicion de la estela
+                    // La posicion de la estela es estela.id, pero debe pasarse a centro de coordenada
+
+                    foreach (Nodo nodo in Estela)
+                    {
+                        GameObject.Destroy(nodo.ObjectoAsignado);
+                    }
                     estaVivo = false;
+                    if (esJugador)
+                    {
+                        controladorAudio.PararTodosLosSondos();
+                    }
+                    controladorAudio.ReproducirSonido(controladorAudio.ExplosionJugador);
                     return false;
                 }
                 ComprobarCabeza();
@@ -291,10 +321,7 @@ namespace Assets.Scripts
                     {
                         controladorAudio.PararTodosLosSondos();
                     }
-
                     controladorAudio.ReproducirSonido(controladorAudio.ExplosionJugador);
-
-                    // Para todos los sonidos del controlador
                 }
                 estaVivo = false;
                 return false;
@@ -362,21 +389,34 @@ namespace Assets.Scripts
             // Si el item es bomba, pone un obstaculo en la dirección contraria a la que se mueve la motocicleta
             else if (item.nombre == "Bomba")
             {
+                if (cantidadBombas == 0 || bomba != null)
+                {
+                    return;
+                }
                 if (direccion.x == -1)
                 {
-                    Cabeza.Derecha.esObstaculo = true;
+                    nodoBomba = Cabeza.Derecha;
                 } else if (direccion.x == 1)
                 {
-                    Cabeza.Izquierda.esObstaculo = true;
+                    nodoBomba = Cabeza.Izquierda;
                 }
                 else if (direccion.y == -1)
                 {
-                    Cabeza.Arriba.esObstaculo = true;
+                    nodoBomba = Cabeza.Arriba;
                 }
-                else if (direccion.y == 1)
+                else
                 {
-                    Cabeza.Abajo.esObstaculo = true;
+                    nodoBomba = Cabeza.Abajo;
                 }
+                bomba = new GameObject();
+                bomba.AddComponent<SpriteRenderer>();
+                bomba.GetComponent<SpriteRenderer>().sprite = Texturas.instancia.BombaRoja;
+                Vector3 posicionBomba = Espacio.CoordenadaACentro(nodoBomba.id);
+                bomba.transform.localScale = new Vector3(.3f, .3f, .3f);
+                bomba.transform.position = new Vector3(posicionBomba.x, posicionBomba.y, 10);
+                bomba.GetComponent<SpriteRenderer>().sortingOrder = 1;
+                nodoBomba.ObjectoAsignado = bomba;
+                nodoBomba.esObstaculo = true;
                 cantidadBombas--;
                 controladorAudio.ReproducirSonido(controladorAudio.UtilizarBomba);
             }

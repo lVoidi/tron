@@ -121,6 +121,10 @@ public class Controlador : MonoBehaviour
             bool MovimientoExitoso = InstanciaMotoJugador.Mover(PosicionCelda);
             if (!MovimientoExitoso && !InstanciaMotoJugador.estaVivo)
             {
+                ParticleSystem explosion = Texturas.instancia.Explosion;
+                explosion.transform.position = new Vector3(PosicionCelda.x, PosicionCelda.y, explosion.transform.position.z);
+                explosion.Play();
+                GameObject.Destroy(gameObject);
                 return;
             }
 
@@ -183,19 +187,8 @@ public class Controlador : MonoBehaviour
         PosicionNodo = new Vector2Int((int)Cabeza.id.x, (int)Cabeza.id.y);
         TiempoEntreMovimientos = 0.035f * (12 - InstanciaMotoJugador.velocidad);
         InstanciaMotoJugador.TiempoDesdeUsoVelocidad += Time.deltaTime;
-    }
-
-    public void MostrarExplosionEn(Vector2Int posicion)
-    {
-        GameObject ObjetoTemporal = new GameObject();
-        ObjetoTemporal.transform.position = new Vector3(posicion.x, posicion.y, 10);
-        ObjetoTemporal.AddComponent<SpriteRenderer>().sprite = Texturas.instancia.GifExplosion;
-        transform.position = new Vector3(-1000, 0, -10);
-    }
-
-    private void DetectarMuerte()
-    {
-        MostrarExplosionEn(PosicionCelda);
+        InstanciaMotoJugador.TiempoDesdeUsoBomba += Time.deltaTime;
+        InstanciaMotoJugador.TiempoDesdeUsoInmunidad += Time.deltaTime;
     }
 
     // Actualizacion de cada frame
