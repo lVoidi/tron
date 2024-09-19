@@ -11,6 +11,7 @@ public class Texturas : MonoBehaviour
 
     public static Texturas instancia;
     public Sprite SpriteMotocicleta;
+    public Sprite SpriteCuandoTieneVelocidad;
     public Sprite EstelaGenerica;
 
     // Bots que simulan jugadores

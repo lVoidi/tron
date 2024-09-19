@@ -83,7 +83,11 @@ public class Controlador : MonoBehaviour
         }
         else if (Input.GetKeyDown(KeyCode.LeftShift))
         {
-            InstanciaMotoJugador.UtilizarItem();
+            InstanciaMotoJugador.UtilizarItem(PosicionCelda);
+        }
+        else if (Input.GetKeyDown(KeyCode.LeftAlt))
+        {
+            // Alterna el poder
         }
     }
 
@@ -99,7 +103,6 @@ public class Controlador : MonoBehaviour
             // Actualiza la posición de la motocicleta en la clase Controlador
             PosicionCelda.x += (int)InstanciaMotoJugador.direccion.x;
             PosicionCelda.y += (int)InstanciaMotoJugador.direccion.y;
-
             // Simular espacio toroidal para 31 de largo y 13 de ancho
             if (PosicionCelda.x < -31 / 2)
             {
@@ -117,6 +120,8 @@ public class Controlador : MonoBehaviour
             {
                 PosicionCelda.y = -13 / 2;
             }
+
+
             // Mueve la motocicleta dentro de la red
             bool MovimientoExitoso = InstanciaMotoJugador.Mover(PosicionCelda);
             if (!MovimientoExitoso && !InstanciaMotoJugador.estaVivo)
@@ -127,7 +132,6 @@ public class Controlador : MonoBehaviour
                 GameObject.Destroy(gameObject);
                 return;
             }
-
             InstanciaMotoJugador.ActualizarEstela(PosicionEstela);
             // Mueve la motocicleta en la escena
             transform.position = new Vector3(PosicionCelda.x, PosicionCelda.y, 1);
@@ -135,8 +139,8 @@ public class Controlador : MonoBehaviour
             Vector2Int dir = new Vector2Int(InstanciaMotoJugador.direccion.x, InstanciaMotoJugador.direccion.y);
             transform.eulerAngles = new Vector3(0, 0, ObtenerAnguloAPartirDeVectorDireccion(dir) - 90);
             // Si el movimiento no fue exitoso y la motocicleta no está viva, se termina el juego
-            
-            
+
+
             // Disminuye el combustible de la motocicleta en uno
             InstanciaMotoJugador.combustible--;
 
@@ -144,7 +148,7 @@ public class Controlador : MonoBehaviour
             TiempoUltimoMovimiento -= TiempoEntreMovimientos;
 
             Cabeza = InstanciaMotoJugador.Cabeza;
-            
+
             // Actualiza la velocidad de la motocicleta
             //TiempoEntreMovimientos = ( 10 - InstanciaMotoJugador.velocidad )/25;
         }
@@ -187,8 +191,17 @@ public class Controlador : MonoBehaviour
         PosicionNodo = new Vector2Int((int)Cabeza.id.x, (int)Cabeza.id.y);
         TiempoEntreMovimientos = 0.035f * (12 - InstanciaMotoJugador.velocidad);
         InstanciaMotoJugador.TiempoDesdeUsoVelocidad += Time.deltaTime;
-        InstanciaMotoJugador.TiempoDesdeUsoBomba += Time.deltaTime;
-        InstanciaMotoJugador.TiempoDesdeUsoInmunidad += Time.deltaTime;
+        if (InstanciaMotoJugador.bomba != null)
+        {
+            InstanciaMotoJugador.TiempoDesdeUsoBomba += Time.deltaTime;
+        } else if (InstanciaMotoJugador.bombaExplotando == true)
+        {
+            InstanciaMotoJugador.TiempoDesdeExplosionNuclear += Time.deltaTime;
+        }
+        else if (InstanciaMotoJugador.esInmune)
+        {
+            InstanciaMotoJugador.TiempoDesdeUsoInmunidad += Time.deltaTime;
+        }
     }
 
     // Actualizacion de cada frame

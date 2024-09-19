@@ -67,7 +67,7 @@ namespace Assets.Scripts
             // Conecta los nodos exteriores para simular un espacio toroidal
             for (int x = 0; x < largo; x++)
             {
-                for (int y = 0; y < ancho; y++)
+                for (int y = ancho-1; y >= 0; y--)
                 {
                     Nodo nodo = RedNodos[x, y];
                     if (x > 0)
@@ -182,12 +182,12 @@ namespace Assets.Scripts
 
         public Vector3 CoordenadaACentro(Vector2Int coord)
         {
-            return new Vector3(coord.x - largo / 2, coord.y - ancho / 2, 10);
+            return new Vector3(coord.x - largo / 2, coord.y - ancho / 2, 1);
         }
 
         public Vector3 CentroACoordenada(Vector2Int centro)
         {
-            return new Vector3(centro.x + largo / 2, centro.y + ancho / 2, 10);
+            return new Vector3(centro.x + largo / 2, centro.y + ancho / 2, 1);
         }
 
 
@@ -235,6 +235,23 @@ namespace Assets.Scripts
                 return Abajo;
             }
 
+        }
+
+        public Nodo ObtenerNodoDireccionContraria(Vector2Int dir)
+        {
+            if (dir.x == 1)
+            {
+                return Izquierda;
+            } else if (dir.x == -1)
+            {
+                return Derecha;
+            } else if (dir.y == 1)
+            {
+                return Abajo;
+            } else
+            {
+                return Arriba;
+            }
         }
     }
 }

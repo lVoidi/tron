@@ -29,6 +29,7 @@ using Random = System.Random;
 using Quaternion = UnityEngine.Quaternion;
 using Vector3 = UnityEngine.Vector3;
 using static UnityEditor.PlayerSettings;
+using UnityEngine.Rendering.Universal;
 namespace Assets.Scripts
 {
     public class Motocicleta
@@ -50,6 +51,7 @@ namespace Assets.Scripts
 
         // Direccion en la que se mueve la motocicleta
         public Vector2Int direccion;
+        public Vector2Int posicion;
 
         // Atributos de la motocicleta
         public int tamagnoEstela = 3;
@@ -58,6 +60,7 @@ namespace Assets.Scripts
         public bool esInmune = false;
         public bool estaVivo = true;
         public bool esJugador = true;
+        public bool bombaExplotando = false;
 
         public int cantidadEscudos = 0;
         public int cantidadVelocidades = 0;
@@ -69,8 +72,12 @@ namespace Assets.Scripts
         public float TiempoLimiteVelocidad = 5f;
         public float TiempoDesdeUsoInmunidad = 0;
         public float TiempoDesdeUsoBomba = 0;
+        public float TiempoDesdeExplosionNuclear = 0;
+
+        public int PoderUtilizado = 1; // Toma valor de 1 o -1, donde 1 es la velocidad y -1 es la inmunidad
 
         public GameObject bomba;
+        public GameObject explosion;
         public Nodo nodoBomba;
 
         // Generador de numeros aleatorios
@@ -93,14 +100,6 @@ namespace Assets.Scripts
             // Inicializa la pila de poderes
             poderes = new PilaPoderes();
             controladorAudio = GameObject.Find("ManejadorAudio").GetComponent<ControladorAudio>();
-
-            // Crea estela inicial
-            for (int i = 0; i < tamagnoEstela; i++)
-            {
-                Nodo nodo = Espacio.RedNodos[15, 6];
-                nodo.esCabeza = false;
-                Estela.AddLast(nodo);
-            }
         }
 
         public void AsignarCabeza(int x, int y)
@@ -111,7 +110,7 @@ namespace Assets.Scripts
 
         public void ComprobarCabeza()
         {
-            
+
             if (Cabeza.item != null)
             {
                 Item item = Cabeza.item;
@@ -161,14 +160,14 @@ namespace Assets.Scripts
                 controladorAudio.ReproducirSonido(controladorAudio.RecogerPoderGenerico);
 
             }
-            
-            
+
+
         }
 
         public void ActualizarEstela(Vector2Int pos)
         {
             Vector3 posicionEspacio = Espacio.CentroACoordenada(pos);
-            Nodo ultimaEstela = Espacio.RedNodos[(int) posicionEspacio.x, (int) posicionEspacio.y];
+            Nodo ultimaEstela = Espacio.RedNodos[(int)posicionEspacio.x, (int)posicionEspacio.y];
             ultimaEstela.id = new Vector2Int((int)pos.x, (int)pos.y);
             Estela.AddFirst(ultimaEstela);
             ultimaEstela.id = Estela.Last.Value.id;
@@ -207,7 +206,7 @@ namespace Assets.Scripts
 
             if (Cabeza.ObtenerNodoAdyacente(direccion).esObstaculo)
             {
-                
+
                 if (direccion == new Vector2Int(-1, 0) || direccion == new Vector2Int(1, 0))
                 {
                     int Decision = rng.Next(0, 2);
@@ -243,14 +242,16 @@ namespace Assets.Scripts
 
         public bool Mover(Vector2Int pos)
         {
-
+            posicion = pos;
+            Vector3 posicionEspacio = Espacio.CentroACoordenada(pos);
+            Cabeza = Espacio.RedNodos[(int)posicionEspacio.x, (int)posicionEspacio.y];
             // Analiza si el jugador sigue vivo, mediante el combustible. Si es así, va a intercambiar
             // la cabeza de la motocicleta por el nodo adyacente en la dirección de movimiento.
             if (combustible > 0 && estaVivo)
             {
                 // Obtiene las coordenadas de la cabeza de la motocicleta actual en la matriz
 
-                
+
                 if (TiempoDesdeUsoVelocidad >= TiempoLimiteVelocidad)
                 {
                     velocidad = 5;
@@ -258,22 +259,56 @@ namespace Assets.Scripts
                     TiempoDesdeUsoVelocidad = 0;
                 }
 
-                if (TiempoDesdeUsoInmunidad >= 5)
+                if (TiempoDesdeUsoInmunidad >= 5f)
                 {
                     esInmune = false;
                     TiempoDesdeUsoInmunidad = 0;
                 }
 
-                if (TiempoDesdeUsoBomba >= 30)
+                if (TiempoDesdeUsoBomba >= 3f)
                 {
-                    if (bomba != null)
-                    {
-                        GameObject.Destroy(bomba);
-                    }
+                    GameObject.Destroy(bomba);
                     // Explota la bomba
+                    if (bombaExplotando == false)
+                    {
+                        explosion = new();
+                        explosion.AddComponent<SpriteRenderer>();
+                        SpriteRenderer visualizacion = explosion.GetComponent<SpriteRenderer>();
+                        visualizacion.sprite = Texturas.instancia.BombaNuclearTiradaPorElEstadoDeIsraelEnEspacioCivilPalestino;
+                        explosion.transform.localScale = new Vector3(0.954f/3,1.465f/3,1f/3);
+                        visualizacion.sortingOrder = 1;
+                        Vector3 tempCoord = Espacio.CoordenadaACentro(nodoBomba.id);
+                        explosion.transform.position = tempCoord;
+
+                        nodoBomba.esObstaculo = true;
+                        nodoBomba.Abajo.esObstaculo = true;
+                        nodoBomba.Abajo.Izquierda.esObstaculo = true;
+                        nodoBomba.Abajo.Derecha.esObstaculo = true;
+                        nodoBomba.Arriba.esObstaculo = true;
+                        nodoBomba.Arriba.Derecha.esObstaculo= true;
+                        nodoBomba.Arriba.Izquierda.esObstaculo = true;
+
+                    }
+                    bombaExplotando = true;
+                    if (TiempoDesdeExplosionNuclear >= 1f)
+                    {
+                        GameObject.Destroy(explosion);
+                        bombaExplotando = false;
+                        TiempoDesdeExplosionNuclear = 0f;
+                        TiempoDesdeUsoBomba = 0;
+
+                        nodoBomba.esObstaculo = false;
+                        nodoBomba.Abajo.esObstaculo = false;
+                        nodoBomba.Abajo.Izquierda.esObstaculo = false;
+                        nodoBomba.Abajo.Derecha.esObstaculo = false;
+                        nodoBomba.Arriba.esObstaculo = false;
+                        nodoBomba.Arriba.Derecha.esObstaculo = false;
+                        nodoBomba.Arriba.Izquierda.esObstaculo = false;
+                    }
+
                 }
 
-                UnityEngine.Vector3 posNueva = Espacio.CentroACoordenada(pos);
+                Vector3 posNueva = Espacio.CentroACoordenada(pos);
 
                 int x = (int)posNueva.x;
                 int y = (int)posNueva.y;
@@ -281,34 +316,40 @@ namespace Assets.Scripts
                 // Quita la cabeza de la motocicleta
                 Cabeza.esCabeza = false;
 
-                Cabeza = Espacio.RedNodos[x,y];
+                Cabeza = Espacio.RedNodos[x, y];
                 if (Cabeza.esObstaculo || Cabeza.esCabeza)
                 {
                     // Va a generar una explosion en la cabeza y en cada posicion de la estela
                     // La posicion de la estela es estela.id, pero debe pasarse a centro de coordenada
-
-                    foreach (Nodo nodo in Estela)
+                    if (esInmune)
                     {
-                        GameObject.Destroy(nodo.ObjectoAsignado);
+                        esInmune = false;
+                        TiempoDesdeUsoInmunidad = 0;
                     }
-                    estaVivo = false;
-                    if (esJugador)
+                    else
                     {
-                        controladorAudio.PararTodosLosSondos();
+                        foreach (Nodo nodo in Estela)
+                        {
+                            GameObject.Destroy(nodo.ObjectoAsignado);
+                        }
+                        estaVivo = false;
+                        if (esJugador)
+                        {
+                            controladorAudio.PararTodosLosSondos();
+                        }
+                        controladorAudio.ReproducirSonido(controladorAudio.ExplosionJugador);
+                        return false;
                     }
-                    controladorAudio.ReproducirSonido(controladorAudio.ExplosionJugador);
-                    return false;
                 }
                 ComprobarCabeza();
                 Esquivar();
                 // Asigna la nueva cabeza de la motocicleta
                 Cabeza = Cabeza.ObtenerNodoAdyacente(direccion);
-
                 // Comprueba si la nueva cabeza de la motocicleta es un obstaculo
                 // Si es un obstaculo, la motocicleta muere
-                
+
                 Cabeza.esCabeza = true;
-                
+
 
             }
 
@@ -360,30 +401,27 @@ namespace Assets.Scripts
                     nuevaVelocidad = 10;
                 }
                 velocidad = nuevaVelocidad;
-                TiempoLimiteVelocidad = (float) rng.Next(3, 7);
+                TiempoLimiteVelocidad = (float)rng.Next(3, 7);
                 cantidadVelocidades--;
                 controladorAudio.ReproducirSonido(controladorAudio.UtilizarAumentoVelocidad);
                 controladorAudio.ReproducirMusica(controladorAudio.SonidoFondoVelocidad);
             }
         }
 
-        public void UtilizarItem()
+        public void UtilizarItem(Vector2Int pos)
         {
-            // Saca un item de la cola de items
+            if (items.BuscarItem("Combustible") != null)
+            {
+                combustible += rng.Next(1, 100 - combustible);
+                cantidadCombustibles--;
+                controladorAudio.ReproducirSonido(controladorAudio.UtilizarGasolina);
+            }
+
             Item item = items.SacarItem();
 
-            // Si no hay item, no hace nada
             if (item == null)
             {
                 return;
-            }
-
-            // Si el item es combustible, aumenta el combustible de la motocicleta en un valor aleatorio
-            if (item.nombre == "Combustible")
-            {
-                combustible += rng.Next(1, 100-combustible);
-                cantidadCombustibles--;
-                controladorAudio.ReproducirSonido(controladorAudio.UtilizarGasolina);
             }
 
             // Si el item es bomba, pone un obstaculo en la dirección contraria a la que se mueve la motocicleta
@@ -393,30 +431,17 @@ namespace Assets.Scripts
                 {
                     return;
                 }
-                if (direccion.x == -1)
-                {
-                    nodoBomba = Cabeza.Derecha;
-                } else if (direccion.x == 1)
-                {
-                    nodoBomba = Cabeza.Izquierda;
-                }
-                else if (direccion.y == -1)
-                {
-                    nodoBomba = Cabeza.Arriba;
-                }
-                else
-                {
-                    nodoBomba = Cabeza.Abajo;
-                }
+                Vector3 posDesCentrada = Espacio.CentroACoordenada(pos);
+                pos = new((int)posDesCentrada.x, (int)posDesCentrada.y);
+                Vector2Int nuevaPos = new(pos.x - direccion.x, pos.y - direccion.y);
+                nodoBomba = Espacio.ObtenerNodo(nuevaPos);
+                nodoBomba.id = nuevaPos;
                 bomba = new GameObject();
                 bomba.AddComponent<SpriteRenderer>();
                 bomba.GetComponent<SpriteRenderer>().sprite = Texturas.instancia.BombaRoja;
-                Vector3 posicionBomba = Espacio.CoordenadaACentro(nodoBomba.id);
                 bomba.transform.localScale = new Vector3(.3f, .3f, .3f);
-                bomba.transform.position = new Vector3(posicionBomba.x, posicionBomba.y, 10);
+                bomba.transform.position = Espacio.CoordenadaACentro(nuevaPos);
                 bomba.GetComponent<SpriteRenderer>().sortingOrder = 1;
-                nodoBomba.ObjectoAsignado = bomba;
-                nodoBomba.esObstaculo = true;
                 cantidadBombas--;
                 controladorAudio.ReproducirSonido(controladorAudio.UtilizarBomba);
             }
@@ -475,12 +500,37 @@ namespace Assets.Scripts
             items = new();
         }
 
+
+        public Item BuscarItem(string nombre)
+        {
+            foreach (Item item in items)
+            {
+                if (item.nombre == nombre)
+                {
+                    return item;
+                }
+            }
+            return null;
+        }
+
         // Agrega un item a la cola
         public void AgregarItem(Item item)
         {
 
             items.AddLast(item);
-            
+
+        }
+
+        public void EliminarItemEspecifico(string nombre)
+        {
+            foreach (Item item in items)
+            {
+                if (item.nombre == nombre)
+                {
+                    items.Remove(item);
+                    return;
+                }
+            }
         }
 
         // Saca un item de la cola
