@@ -26,13 +26,7 @@ namespace Assets.Scripts
         public int largo;
         public int ancho;
 
-        private GameObject[] objetos = {
-            Texturas.instancia.EscudoPoder,
-            Texturas.instancia.VelocidadPoder,
-            Texturas.instancia.CombustibleItem,
-            Texturas.instancia.EstelaItem,
-            Texturas.instancia.BombaItem
-        };
+        private GameObject[] objetos;
 
         public Red(int espacios_x, int espacios_y)
         {
@@ -41,10 +35,33 @@ namespace Assets.Scripts
             ancho = espacios_y;
 
             RedNodos = new Nodo[largo, ancho];
+            GenerarListaObjetos();
             GenerarNodos();
             ActualizarConexionesNodos();
             GenerarObjetos();
 
+        }
+
+        public void GenerarListaObjetos()
+        {
+            objetos = new GameObject[5];
+            Sprite[] sprites = {
+                Texturas.instancia.Escudo,
+                Texturas.instancia.Velocidad,
+                Texturas.instancia.Combustible,
+                Texturas.instancia.Estela,
+                Texturas.instancia.Bomba
+            };
+
+            for (int i = 0; i < sprites.Length; i++)
+            {
+                GameObject gameObject = new GameObject();
+                gameObject.name = $"{i}";
+                gameObject.AddComponent<SpriteRenderer>().sprite = sprites[i];
+                gameObject.GetComponent<SpriteRenderer>().sortingOrder = 10;
+                gameObject.transform.localScale = Texturas.instancia.escala;
+                objetos[i] = gameObject;
+            }
         }
 
         public void GenerarNodos()
@@ -56,7 +73,7 @@ namespace Assets.Scripts
                 {
                     Nodo nodo = new();
                     nodo.id = new Vector2Int(i, j);
-                    RedNodos[i, ancho-j-1] = nodo;
+                    RedNodos[i, ancho - j - 1] = nodo;
                 }
             }
         }
@@ -67,7 +84,7 @@ namespace Assets.Scripts
             // Conecta los nodos exteriores para simular un espacio toroidal
             for (int x = 0; x < largo; x++)
             {
-                for (int y = ancho-1; y >= 0; y--)
+                for (int y = ancho - 1; y >= 0; y--)
                 {
                     Nodo nodo = RedNodos[x, y];
                     if (x > 0)
@@ -106,7 +123,7 @@ namespace Assets.Scripts
             }
         }
 
-        
+
         public void GenerarObjetos()
         {
             // Posiciona todos los objetos en lugares aleatorios del mapa
@@ -130,51 +147,52 @@ namespace Assets.Scripts
         {
 
             Nodo nodo = RedNodos[coord.x, coord.y];
-
-            if (objeto == Texturas.instancia.EscudoPoder)
+            nodo.ObjectoAsignado = objeto;
+            if (objeto.name == "0")
             {
                 nodo.poder = new Poder
                 {
                     nombre = "Escudo",
                 };
             }
-            else if (objeto == Texturas.instancia.VelocidadPoder)
+            else if (objeto.name == "1")
             {
                 nodo.poder = new Poder
                 {
                     nombre = "Velocidad",
                 };
             }
-            else if (objeto == Texturas.instancia.BombaItem)
-            {
-                nodo.item = new Item
-                {
-                    nombre = "Bomba",
-                };
-            }
-            else if (objeto == Texturas.instancia.CombustibleItem)
+            else if (objeto.name == "2")
             {
                 nodo.item = new Item
                 {
                     nombre = "Combustible",
                 };
             }
-            else if (objeto == Texturas.instancia.EstelaItem)
+            else if (objeto.name == "3")
             {
                 nodo.item = new Item
                 {
                     nombre = "Estela",
                 };
-
             }
-            
+            else
+            {
+                nodo.item = new Item
+                {
+                    nombre = "Bomba",
+                };
+            }
+
         }
 
         public void PosicionarObjetoEnMapa(Vector2Int coord, GameObject objeto)
         {
             Nodo nodo = ObtenerNodo(coord);
             nodo.id = coord;
-            objeto.transform.position = CoordenadaACentro(coord);
+            Vector3 pos = CoordenadaACentro(coord);
+            objeto.transform.position = new(pos.x, pos.y, 1);
+
         }
 
         // Función que toma una coordenada y le mueve el centro, ya que en unity 
@@ -242,13 +260,16 @@ namespace Assets.Scripts
             if (dir.x == 1)
             {
                 return Izquierda;
-            } else if (dir.x == -1)
+            }
+            else if (dir.x == -1)
             {
                 return Derecha;
-            } else if (dir.y == 1)
+            }
+            else if (dir.y == 1)
             {
                 return Abajo;
-            } else
+            }
+            else
             {
                 return Arriba;
             }

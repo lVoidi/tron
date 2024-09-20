@@ -20,6 +20,12 @@ public class Texturas : MonoBehaviour
     public Sprite BotAmarillo;
     public Sprite BotRosado;
 
+    public Sprite Velocidad;
+    public Sprite Escudo;
+    public Sprite Combustible;
+    public Sprite Estela;
+    public Sprite Bomba;
+
     public GameObject VelocidadPoder;
     public GameObject EscudoPoder;
     public GameObject CombustibleItem;
@@ -40,11 +46,14 @@ public class Texturas : MonoBehaviour
     // 1.4419 / 1.4419 / 1.4419
     public Sprite BombaRoja;
 
+    public Vector3 escala;
+
     private void Awake()
     {
         if (instancia == null)
         {
             instancia = this;
+            escala = VelocidadPoder.transform.localScale;
         }
         else
         {

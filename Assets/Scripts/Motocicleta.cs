@@ -118,53 +118,107 @@ namespace Assets.Scripts
                 Item item = Cabeza.item;
                 Cabeza.item = null;
                 items.AgregarItem(item);
-                Vector2Int PosicionAleatoriaNueva = new Vector2Int(rng.Next(2, Espacio.largo - 2), rng.Next(2, Espacio.ancho - 2));
                 if (item.nombre == "Combustible")
                 {
-                    Espacio.PosicionarObjetoEnMapa(PosicionAleatoriaNueva, Texturas.instancia.CombustibleItem);
-                    Espacio.CategorizarNodo(Texturas.instancia.CombustibleItem, PosicionAleatoriaNueva);
+                    GenerarObjetoEnPosicionAleatoria("Combustible");
                     cantidadCombustibles++;
                 }
                 else if (item.nombre == "Estela")
                 {
-                    Espacio.PosicionarObjetoEnMapa(PosicionAleatoriaNueva, Texturas.instancia.EstelaItem);
-                    Espacio.CategorizarNodo(Texturas.instancia.EstelaItem, PosicionAleatoriaNueva);
+                    GenerarObjetoEnPosicionAleatoria("Estela");
                     cantidadEstelas++;
                 }
                 else if (item.nombre == "Bomba")
                 {
-                    Espacio.PosicionarObjetoEnMapa(PosicionAleatoriaNueva, Texturas.instancia.BombaItem);
-                    Espacio.CategorizarNodo(Texturas.instancia.BombaItem, PosicionAleatoriaNueva);
+                    GenerarObjetoEnPosicionAleatoria("Bomba");
                     cantidadBombas++;
                 }
+                GameObject.Destroy(Cabeza.ObjectoAsignado);
                 controladorAudio.ReproducirSonido(controladorAudio.RecogerItemGenerico);
 
-                Debug.Log($"Posicion: {PosicionAleatoriaNueva.x},{PosicionAleatoriaNueva.y}");
             }
             else if (Cabeza.poder != null)
             {
                 Poder poder = Cabeza.poder;
                 Cabeza.poder = null;
                 poderes.AgregarPoder(poder);
-                Vector2Int PosicionAleatoriaNueva = new Vector2Int(rng.Next(2, Espacio.largo - 2), rng.Next(2, Espacio.ancho - 2));
                 if (poder.nombre == "Velocidad")
                 {
-                    Espacio.PosicionarObjetoEnMapa(PosicionAleatoriaNueva, Texturas.instancia.VelocidadPoder);
-                    Espacio.CategorizarNodo(Texturas.instancia.VelocidadPoder, PosicionAleatoriaNueva);
+                    GenerarObjetoEnPosicionAleatoria("Velocidad");
                     cantidadVelocidades++;
                 }
                 else if (poder.nombre == "Escudo")
                 {
-                    Espacio.PosicionarObjetoEnMapa(PosicionAleatoriaNueva, Texturas.instancia.EscudoPoder);
-                    Espacio.CategorizarNodo(Texturas.instancia.EscudoPoder, PosicionAleatoriaNueva);
+                    GenerarObjetoEnPosicionAleatoria("Escudo");
                     cantidadEscudos++;
                 }
+                GameObject.Destroy(Cabeza.ObjectoAsignado);
                 controladorAudio.ReproducirSonido(controladorAudio.RecogerPoderGenerico);
 
             }
 
 
         }
+
+        public void GenerarObjetoEnPosicionAleatoria(string nombre)
+        {
+            Vector2Int coord = new Vector2Int(rng.Next(0, Espacio.largo), rng.Next(0, Espacio.ancho));
+            Nodo nodo = Espacio.RedNodos[coord.x, coord.y];
+            while (nodo.esObstaculo || nodo.item != null || nodo.poder != null)
+            {
+                coord = new Vector2Int(rng.Next(0, Espacio.largo), rng.Next(0, Espacio.ancho));
+                nodo = Espacio.RedNodos[coord.x, coord.y];
+            }
+
+            GameObject gameObject = new GameObject();
+            gameObject.AddComponent<SpriteRenderer>();
+            // Crea el gameobject a partir del sprite
+            if (nombre == "Escudo")
+            {
+                gameObject.GetComponent<SpriteRenderer>().sprite = Texturas.instancia.Escudo;
+                nodo.poder = new Poder
+                {
+                    nombre = "Escudo",
+                };
+            }
+            else if (nombre == "Velocidad")
+            {
+                gameObject.GetComponent<SpriteRenderer>().sprite = Texturas.instancia.Velocidad;
+                nodo.poder = new Poder
+                {
+                    nombre = "Velocidad",
+                };
+            }
+            else if (nombre == "Combustible")
+            {
+                gameObject.GetComponent<SpriteRenderer>().sprite = Texturas.instancia.Combustible;
+                nodo.item = new Item
+                {
+                    nombre = "Combustible",
+                };
+            }
+            else if (nombre == "Estela")
+            {
+                gameObject.GetComponent<SpriteRenderer>().sprite = Texturas.instancia.Estela;
+                nodo.item = new Item
+                {
+                    nombre = "Estela",
+                };
+            }
+            else if (nombre == "Bomba")
+            {
+                gameObject.GetComponent<SpriteRenderer>().sprite = Texturas.instancia.Bomba;
+                nodo.item = new Item
+                {
+                    nombre = "Bomba",
+                };
+            }
+            gameObject.GetComponent<SpriteRenderer>().sortingOrder = 10;
+            gameObject.transform.localScale = Texturas.instancia.escala;
+            gameObject.transform.position = Espacio.CoordenadaACentro(coord);
+            nodo.ObjectoAsignado = gameObject;
+        }
+
 
         public void ActualizarEstela(Vector2Int pos)
         {
@@ -241,6 +295,8 @@ namespace Assets.Scripts
             }
 
         }
+
+
 
         public bool Mover(Vector2Int pos)
         {
@@ -430,6 +486,7 @@ namespace Assets.Scripts
                 combustible += rng.Next(1, 100 - combustible);
                 cantidadCombustibles--;
                 controladorAudio.ReproducirSonido(controladorAudio.UtilizarGasolina);
+                return;
             }
 
             Item item = items.SacarItem();
@@ -535,6 +592,7 @@ namespace Assets.Scripts
             {
                 if (item.nombre == nombre)
                 {
+                    items.Remove(item);
                     return item;
                 }
             }
