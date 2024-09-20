@@ -296,7 +296,20 @@ namespace Assets.Scripts
 
         }
 
+        public void BotarItemsYPoderesDeLaMotocicletaPorElMapaAlMorir()
+        {
+            // Bota los poderes
+            foreach (Poder poder in poderes.poderes)
+            {
+                GenerarObjetoEnPosicionAleatoria(poder.nombre);
+            }
 
+            // Bota los items
+            foreach (Item item in items.items)
+            {
+                GenerarObjetoEnPosicionAleatoria(item.nombre);
+            }
+        }
 
         public bool Mover(Vector2Int pos)
         {
@@ -307,9 +320,6 @@ namespace Assets.Scripts
             // la cabeza de la motocicleta por el nodo adyacente en la dirección de movimiento.
             if (combustible > 0 && estaVivo)
             {
-                // Obtiene las coordenadas de la cabeza de la motocicleta actual en la matriz
-
-
                 if (TiempoDesdeUsoVelocidad >= TiempoLimiteVelocidad)
                 {
                     activarCambioSprite = true;
@@ -375,7 +385,6 @@ namespace Assets.Scripts
                 int x = (int)posNueva.x;
                 int y = (int)posNueva.y;
 
-                // Quita la cabeza de la motocicleta
                 Cabeza.esCabeza = false;
 
                 Cabeza = Espacio.RedNodos[x, y];
@@ -401,6 +410,7 @@ namespace Assets.Scripts
                             controladorAudio.PararTodosLosSondos();
                         }
                         controladorAudio.ReproducirSonido(controladorAudio.ExplosionJugador);
+                        BotarItemsYPoderesDeLaMotocicletaPorElMapaAlMorir();
                         return false;
                     }
                 }
@@ -425,6 +435,7 @@ namespace Assets.Scripts
                     {
                         controladorAudio.PararTodosLosSondos();
                     }
+                    BotarItemsYPoderesDeLaMotocicletaPorElMapaAlMorir();
                     controladorAudio.ReproducirSonido(controladorAudio.ExplosionJugador);
                 }
                 estaVivo = false;
