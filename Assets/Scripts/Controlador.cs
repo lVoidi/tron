@@ -7,6 +7,7 @@ using UnityEngine;
 using Assets.Scripts;
 using Unity.VisualScripting;
 using TMPro;
+using JetBrains.Annotations;
 
 public class Controlador : MonoBehaviour
 {
@@ -22,12 +23,15 @@ public class Controlador : MonoBehaviour
     public float TiempoUltimoMovimiento;
     public float TiempoEntreMovimientos = 0.2f;
 
+    public GameObject seleccion;
+
     public ControladorAudio controladorAudio;
 
 
     private void Awake()
     {
         controladorAudio = GameObject.Find("ManejadorAudio").GetComponent<ControladorAudio>();
+        seleccion = GameObject.Find("Seleccion");
         Espacio = new(31, 13);
         PosicionCelda = new Vector2Int(0, 0);
         TiempoUltimoMovimiento = TiempoEntreMovimientos;
@@ -87,7 +91,17 @@ public class Controlador : MonoBehaviour
         }
         else if (Input.GetKeyDown(KeyCode.LeftAlt))
         {
-            // Alterna el poder
+            InstanciaMotoJugador.PoderUtilizado = -InstanciaMotoJugador.PoderUtilizado;
+            float PosXTransform = seleccion.transform.position.x;
+            float PosYTransform = seleccion.transform.position.y;
+            if (InstanciaMotoJugador.PoderUtilizado == 1)
+            {
+                seleccion.transform.position = new Vector3(PosXTransform-2, PosYTransform, 1);
+            }
+            else
+            {
+                seleccion.transform.position = new Vector3(PosXTransform+2, PosYTransform, 1);
+            }
         }
     }
 
@@ -154,6 +168,23 @@ public class Controlador : MonoBehaviour
         }
     }
 
+    public void CambiarSpriteEnFuncionDePoder()
+    {
+        // Esto significa que se empezó a utilizar la velocidad
+        if (InstanciaMotoJugador.TiempoDesdeUsoVelocidad > 0 || InstanciaMotoJugador.TiempoDesdeUsoInmunidad > 0)
+        {
+            Sprite sprite = Texturas.instancia.SpriteCuandoTieneVelocidad;
+            GetComponent<SpriteRenderer>().sprite = sprite;
+        }
+
+        if (InstanciaMotoJugador.activarCambioSprite == true)
+        {
+            Sprite sprite = Texturas.instancia.SpriteMotocicleta;
+            GetComponent<SpriteRenderer>().sprite = sprite;
+            InstanciaMotoJugador.activarCambioSprite = false;
+        }
+    }
+
     private float ObtenerAnguloAPartirDeVectorDireccion(Vector2Int dir)
     {
         float anguloObtenidoAPartirDeCalculo = Mathf.Atan2(dir.y, dir.x) * Mathf.Rad2Deg;
@@ -190,15 +221,19 @@ public class Controlador : MonoBehaviour
     {
         PosicionNodo = new Vector2Int((int)Cabeza.id.x, (int)Cabeza.id.y);
         TiempoEntreMovimientos = 0.035f * (12 - InstanciaMotoJugador.velocidad);
-        InstanciaMotoJugador.TiempoDesdeUsoVelocidad += Time.deltaTime;
+        if (InstanciaMotoJugador.velocidad > 5)
+        {
+            InstanciaMotoJugador.TiempoDesdeUsoVelocidad += Time.deltaTime;
+        }
         if (InstanciaMotoJugador.bomba != null)
         {
             InstanciaMotoJugador.TiempoDesdeUsoBomba += Time.deltaTime;
-        } else if (InstanciaMotoJugador.bombaExplotando == true)
+        }
+        if (InstanciaMotoJugador.bombaExplotando == true)
         {
             InstanciaMotoJugador.TiempoDesdeExplosionNuclear += Time.deltaTime;
         }
-        else if (InstanciaMotoJugador.esInmune)
+        if (InstanciaMotoJugador.esInmune)
         {
             InstanciaMotoJugador.TiempoDesdeUsoInmunidad += Time.deltaTime;
         }
@@ -212,5 +247,6 @@ public class Controlador : MonoBehaviour
         AdministracionDeMovimientoDeLaMotocicletaPorCambioDeTiempo();
         ActualizarEstadisticas();
         ActualizarVariablesInternas();
+        CambiarSpriteEnFuncionDePoder();
     }
 }

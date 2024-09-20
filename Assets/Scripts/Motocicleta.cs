@@ -57,10 +57,12 @@ namespace Assets.Scripts
         public int tamagnoEstela = 3;
         public int velocidad = 5;
         public int combustible = 100;
+
         public bool esInmune = false;
         public bool estaVivo = true;
         public bool esJugador = true;
         public bool bombaExplotando = false;
+        public bool activarCambioSprite = false;
 
         public int cantidadEscudos = 0;
         public int cantidadVelocidades = 0;
@@ -254,6 +256,7 @@ namespace Assets.Scripts
 
                 if (TiempoDesdeUsoVelocidad >= TiempoLimiteVelocidad)
                 {
+                    activarCambioSprite = true;
                     velocidad = 5;
                     controladorAudio.PararSonidoEfectos();
                     TiempoDesdeUsoVelocidad = 0;
@@ -261,6 +264,7 @@ namespace Assets.Scripts
 
                 if (TiempoDesdeUsoInmunidad >= 5f)
                 {
+                    activarCambioSprite = true;
                     esInmune = false;
                     TiempoDesdeUsoInmunidad = 0;
                 }
@@ -275,7 +279,7 @@ namespace Assets.Scripts
                         explosion.AddComponent<SpriteRenderer>();
                         SpriteRenderer visualizacion = explosion.GetComponent<SpriteRenderer>();
                         visualizacion.sprite = Texturas.instancia.BombaNuclearTiradaPorElEstadoDeIsraelEnEspacioCivilPalestino;
-                        explosion.transform.localScale = new Vector3(0.954f/3,1.465f/3,1f/3);
+                        explosion.transform.localScale = new Vector3(0.954f / 3, 1.465f / 3, 1f / 3);
                         visualizacion.sortingOrder = 1;
                         Vector3 tempCoord = Espacio.CoordenadaACentro(nodoBomba.id);
                         explosion.transform.position = tempCoord;
@@ -285,8 +289,10 @@ namespace Assets.Scripts
                         nodoBomba.Abajo.Izquierda.esObstaculo = true;
                         nodoBomba.Abajo.Derecha.esObstaculo = true;
                         nodoBomba.Arriba.esObstaculo = true;
-                        nodoBomba.Arriba.Derecha.esObstaculo= true;
+                        nodoBomba.Arriba.Derecha.esObstaculo = true;
                         nodoBomba.Arriba.Izquierda.esObstaculo = true;
+
+                        controladorAudio.ReproducirSonido(controladorAudio.ExplosionBomba);
 
                     }
                     bombaExplotando = true;
@@ -325,6 +331,7 @@ namespace Assets.Scripts
                     {
                         esInmune = false;
                         TiempoDesdeUsoInmunidad = 0;
+                        activarCambioSprite = true;
                     }
                     else
                     {
@@ -375,9 +382,17 @@ namespace Assets.Scripts
         public void UtilizarPoder()
         {
             // Saca un poder de la pila de poderes
-            Poder poder = poderes.SacarPoder();
+            Poder poder;
 
-            // Si no hay poder, no hace nada
+            if (PoderUtilizado == 1)
+            {
+                poder = poderes.SacarPoderEspecifico("Velocidad");
+            }
+            else
+            {
+                poder = poderes.SacarPoderEspecifico("Escudo");
+            }
+
             if (poder == null)
             {
                 return;
@@ -469,6 +484,19 @@ namespace Assets.Scripts
         public void AgregarPoder(Poder poder)
         {
             poderes.AddFirst(poder);
+        }
+
+        public Poder SacarPoderEspecifico(string nombre)
+        {
+            foreach (Poder poder in poderes)
+            {
+                if (poder.nombre == nombre)
+                {
+                    poderes.Remove(poder);
+                    return poder;
+                }
+            }
+            return null;
         }
 
         public Poder SacarPoder()
