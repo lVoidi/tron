@@ -13,6 +13,11 @@ public class Controlador : MonoBehaviour
 {
     // Instancia de la motocicleta del jugador
     public Motocicleta InstanciaMotoJugador;
+    public Motocicleta Roja;
+    public Motocicleta Azul;
+    public Motocicleta Amarilla;
+    public Motocicleta Rosada;
+
     public Red Espacio;
     // Posición de la celda en la que se encuentra la motocicleta
     public Vector2Int PosicionCelda;
@@ -22,6 +27,12 @@ public class Controlador : MonoBehaviour
     // Tiempo entre movimientos
     public float TiempoUltimoMovimiento;
     public float TiempoEntreMovimientos = 0.2f;
+
+    public float TiempoDesdeMovimientoRojo = 0, TiempoEntreMovimientosRojo = 0;
+    public float TiempoDesdeMovimientoAzul = 0, TiempoEntreMovimientosAzul = 0;
+    public float TiempoDesdeMovimientoAmarillo = 0, TiempoEntreMovimientosAmarillo = 0;
+    public float TiempoDesdeMovimientoRosado = 0, TiempoEntreMovimientosRosado = 0;
+
 
     public GameObject seleccion;
 
@@ -162,7 +173,6 @@ public class Controlador : MonoBehaviour
             TiempoUltimoMovimiento -= TiempoEntreMovimientos;
 
             Cabeza = InstanciaMotoJugador.Cabeza;
-
             // Actualiza la velocidad de la motocicleta
             //TiempoEntreMovimientos = ( 10 - InstanciaMotoJugador.velocidad )/25;
         }

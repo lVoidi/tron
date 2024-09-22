@@ -30,6 +30,7 @@ using Quaternion = UnityEngine.Quaternion;
 using Vector3 = UnityEngine.Vector3;
 using static UnityEditor.PlayerSettings;
 using UnityEngine.Rendering.Universal;
+using JetBrains.Annotations;
 namespace Assets.Scripts
 {
     public class Motocicleta
@@ -80,6 +81,37 @@ namespace Assets.Scripts
 
         public GameObject bomba;
         public GameObject explosion;
+
+        public GameObject BotRojo;
+        public GameObject BotAzul;
+        public GameObject BotAmarillo;
+        public GameObject BotRosado;
+
+        public Nodo BotRojoCabeza;
+        public Nodo BotAzulCabeza;
+        public Nodo BotAmarilloCabeza;
+        public Nodo BotRosadoCabeza;
+
+        public LinkedList<Nodo> EstelaBotRojo = new();
+        public LinkedList<Nodo> EstelaBotAzul = new();
+        public LinkedList<Nodo> EstelaBotAmarillo = new();
+        public LinkedList<Nodo> EstelaBotRosado = new();
+
+        public int TamagnoEstelaBotRojo = 3;
+        public int TamagnoEstelaBotAzul = 3;
+        public int TamagnoEstelaBotAmarillo = 3;
+        public int TamagnoEstelaBotRosado = 3;
+
+        public bool estaVivoRojo = true;
+        public bool estaVivoAzul = true;
+        public bool estaVivoAmarillo = true;
+        public bool estaVivoRosado = true;
+
+        public Vector2Int PosicionBotRojo, DireccionBotRojo;
+        public Vector2Int PosicionBotAzul, DireccionBotAzul;
+        public Vector2Int PosicionBotAmarillo, DireccionBotAmarillo;
+        public Vector2Int PosicionBotRosado, DireccionBotRosado;
+
         public Nodo nodoBomba;
 
         // Generador de numeros aleatorios
@@ -102,6 +134,393 @@ namespace Assets.Scripts
             // Inicializa la pila de poderes
             poderes = new PilaPoderes();
             controladorAudio = GameObject.Find("ManejadorAudio").GetComponent<ControladorAudio>();
+            CrearBots();
+
+        }
+
+        public void CrearBots()
+        {
+            /*
+             * Los bots se comportan como gusanos, se crean en las esquinas de la matriz y se mueven en una direccion aleatoria
+             * Estos pueden agrandar su estela de manera aleatoria y van a tratar de esquivar los obstaculos y la estela de la motocicleta
+             * Esta funcion agarra los nodos en las esquinas y les asigna una direccion aleatoria
+             * Esto dentro del espacio de nodos
+             * El bot rojo está en (0,0), el azul en 0,ancho-1, el amarillo en largo-1,0 y el rosado en largo-1,ancho-1
+             */
+
+            // Instancia los bots, estos simplemente se moveran y esquivaran obstaculos
+            BotRojo = new GameObject();
+            BotRojo.AddComponent<SpriteRenderer>().sprite = Texturas.instancia.BotRojo;
+            BotRojo.GetComponent<SpriteRenderer>().sortingOrder = 10;
+
+            BotAzul = new GameObject();
+            BotAzul.AddComponent<SpriteRenderer>().sprite = Texturas.instancia.BotAzul;
+            BotAzul.GetComponent<SpriteRenderer>().sortingOrder = 10;
+
+            BotAmarillo = new GameObject();
+            BotAmarillo.AddComponent<SpriteRenderer>().sprite = Texturas.instancia.BotAmarillo;
+            BotAmarillo.GetComponent<SpriteRenderer>().sortingOrder = 10;
+
+            BotRosado = new GameObject();
+            BotRosado.AddComponent<SpriteRenderer>().sprite = Texturas.instancia.BotRosado;
+            BotRosado.GetComponent<SpriteRenderer>().sortingOrder = 10;
+
+            BotRojo.transform.localScale = Texturas.instancia.escala;
+            BotAzul.transform.localScale = Texturas.instancia.escala;
+            BotAmarillo.transform.localScale = Texturas.instancia.escala;
+            BotRosado.transform.localScale = Texturas.instancia.escala;
+
+            // Los bots se posicionan en las esquinas de la matriz
+            PosicionBotRojo = new Vector2Int(5, 2);
+            PosicionBotAzul = new Vector2Int(5, Espacio.ancho - 3);
+            PosicionBotAmarillo = new Vector2Int(Espacio.largo - 6, 2);
+            PosicionBotRosado = new Vector2Int(Espacio.largo - 6, Espacio.ancho - 3);
+
+            DireccionBotRojo = new Vector2Int(0, 1);
+            DireccionBotAzul = new Vector2Int(1, 0);
+            DireccionBotAmarillo = new Vector2Int(0, -1);
+            DireccionBotRosado = new Vector2Int(-1, 0);
+
+            BotRojo.transform.position = Espacio.CoordenadaACentro(PosicionBotRojo);
+            BotAzul.transform.position = Espacio.CoordenadaACentro(PosicionBotAzul);
+            BotAmarillo.transform.position = Espacio.CoordenadaACentro(PosicionBotAmarillo);
+            BotRosado.transform.position = Espacio.CoordenadaACentro(PosicionBotRosado);
+
+            BotRojo.transform.eulerAngles = new Vector3(0, 0, ObtenerAnguloAPartirDeVectorDireccion(DireccionBotRojo) - 90);
+            BotAzul.transform.eulerAngles = new Vector3(0, 0, ObtenerAnguloAPartirDeVectorDireccion(DireccionBotAzul) - 90);
+            BotAmarillo.transform.eulerAngles = new Vector3(0, 0, ObtenerAnguloAPartirDeVectorDireccion(DireccionBotAmarillo) - 90);
+            BotRosado.transform.eulerAngles = new Vector3(0, 0, ObtenerAnguloAPartirDeVectorDireccion(DireccionBotRosado) - 90);
+
+            BotRojoCabeza = Espacio.RedNodos[5, 5];
+            BotAmarilloCabeza = Espacio.RedNodos[Espacio.largo - 6, 5];
+            BotAzulCabeza = Espacio.RedNodos[5, Espacio.ancho - 6];
+            BotRosadoCabeza = Espacio.RedNodos[Espacio.largo - 6, Espacio.ancho - 6];
+        }
+        private float ObtenerAnguloAPartirDeVectorDireccion(Vector2Int dir)
+        {
+            float anguloObtenidoAPartirDeCalculo = Mathf.Atan2(dir.y, dir.x) * Mathf.Rad2Deg;
+            if (anguloObtenidoAPartirDeCalculo < 0)
+            {
+                anguloObtenidoAPartirDeCalculo += 360;
+            }
+            return anguloObtenidoAPartirDeCalculo;
+        }
+
+        public void MoverBots()
+        {
+            if (estaVivoRojo)
+            {
+                // Hace un movimiento aleatorio
+                if (rng.Next(0, 7) == 0)
+                {
+                    if (DireccionBotRojo.x != 0)
+                    {
+                        DireccionBotRojo = new Vector2Int(0, rng.Next(0, 1) == 0 ? 1 : -1);
+                    }
+                    else
+                    {
+                        DireccionBotRojo = new Vector2Int(rng.Next(0, 1) == 0 ? 1 : -1, 0);
+                    }
+                }
+
+                DireccionBotRojo = Esquivar(DireccionBotRojo, BotRojoCabeza);
+                PosicionBotRojo += DireccionBotRojo;
+                PosicionBotRojo = SimularEspacioToroidalPara(PosicionBotRojo);
+                BotRojo.transform.position = Espacio.CoordenadaACentro(PosicionBotRojo);
+                BotRojo.transform.eulerAngles = new Vector3(0, 0, ObtenerAnguloAPartirDeVectorDireccion(DireccionBotRojo) - 90);
+                ActualizarEstelaParaBot("Rojo");
+                BotRojoCabeza.esCabeza = false;
+                BotRojoCabeza = Espacio.ObtenerNodo(PosicionBotRojo);
+                if (BotRojoCabeza.esObstaculo || BotRojoCabeza.esCabeza)
+                {
+                    MatarBot("Rojo");
+                    return;
+                }
+                BotRojoCabeza.esCabeza = true;
+                Espacio.RedNodos[PosicionBotRojo.x, PosicionBotRojo.y] = BotRojoCabeza;
+                // Actualiza los transforms de todos los bots
+            }
+            if (estaVivoAzul)
+            {
+                if (rng.Next(0, 4) == 0)
+                {
+                    if (DireccionBotAzul.x != 0)
+                    {
+                        DireccionBotAzul = new Vector2Int(0, rng.Next(0, 1) == 0 ? 1 : -1);
+                    }
+                    else
+                    {
+                        DireccionBotAzul = new Vector2Int(rng.Next(0, 1) == 0 ? 1 : -1, 0);
+                    }
+                }
+
+
+                DireccionBotAzul = Esquivar(DireccionBotAzul, BotAzulCabeza);
+                PosicionBotAzul += DireccionBotAzul;
+                PosicionBotAzul = SimularEspacioToroidalPara(PosicionBotAzul);
+                BotAzul.transform.position = Espacio.CoordenadaACentro(PosicionBotAzul);
+                BotAzul.transform.eulerAngles = new Vector3(0, 0, ObtenerAnguloAPartirDeVectorDireccion(DireccionBotAzul) - 90);
+                ActualizarEstelaParaBot("Azul");
+                BotAzulCabeza.esCabeza = false;
+                BotAzulCabeza = Espacio.ObtenerNodo(PosicionBotAzul);
+                if (BotAzulCabeza.esObstaculo || BotAzulCabeza.esCabeza)
+                {
+                    MatarBot("Azul");
+                    return;
+                }
+                Espacio.RedNodos[PosicionBotAzul.x, PosicionBotAzul.y] = BotAzulCabeza;
+                BotAzulCabeza.esCabeza = true;
+            }
+            if (estaVivoAmarillo)
+            {
+
+                if (rng.Next(0, 10) == 0)
+                {
+                    if (DireccionBotAmarillo.x != 0)
+                    {
+                        DireccionBotAmarillo = new Vector2Int(0, rng.Next(0, 1) == 0 ? 1 : -1);
+                    }
+                    else
+                    {
+                        DireccionBotAmarillo = new Vector2Int(rng.Next(0, 1) == 0 ? 1 : -1, 0);
+                    }
+                }
+                DireccionBotAmarillo = Esquivar(DireccionBotAmarillo, BotAmarilloCabeza);
+
+                PosicionBotAmarillo += DireccionBotAmarillo;
+                PosicionBotAmarillo = SimularEspacioToroidalPara(PosicionBotAmarillo);
+                BotAmarillo.transform.position = Espacio.CoordenadaACentro(PosicionBotAmarillo);
+                BotAmarillo.transform.eulerAngles = new Vector3(0, 0, ObtenerAnguloAPartirDeVectorDireccion(DireccionBotAmarillo) - 90);
+                ActualizarEstelaParaBot("Amarillo");
+                BotAmarilloCabeza.esCabeza = false;
+                BotAmarilloCabeza = Espacio.ObtenerNodo(PosicionBotAmarillo);
+                if (BotAmarilloCabeza.esObstaculo || BotAmarilloCabeza.esCabeza)
+                {
+                    MatarBot("Amarillo");
+                    return;
+                }
+                Espacio.RedNodos[PosicionBotAmarillo.x, PosicionBotAmarillo.y] = BotAmarilloCabeza;
+                BotAmarilloCabeza.esCabeza = true;
+            }
+            if (estaVivoRosado)
+            {
+
+                if (rng.Next(0, 11) == 0)
+                {
+                    if (DireccionBotRosado.x != 0)
+                    {
+                        DireccionBotRosado = new Vector2Int(0, rng.Next(0, 1) == 0 ? 1 : -1);
+                    }
+                    else
+                    {
+                        DireccionBotRosado = new Vector2Int(rng.Next(0, 1) == 0 ? 1 : -1, 0);
+                    }
+                }
+                DireccionBotRosado = Esquivar(DireccionBotRosado, BotRosadoCabeza);
+
+                PosicionBotRosado += DireccionBotRosado;
+                PosicionBotRosado = SimularEspacioToroidalPara(PosicionBotRosado);
+                BotRosado.transform.position = Espacio.CoordenadaACentro(PosicionBotRosado);
+                BotRosado.transform.eulerAngles = new Vector3(0, 0, ObtenerAnguloAPartirDeVectorDireccion(DireccionBotRosado) - 90);
+                ActualizarEstelaParaBot("Rosado");
+                BotRosadoCabeza.esCabeza = false;
+                BotRosadoCabeza = Espacio.ObtenerNodo(PosicionBotRosado);
+                if (BotRosadoCabeza.esObstaculo || BotRosadoCabeza.esCabeza)
+                {
+                    MatarBot("Rosado");
+                    return;
+                }
+                Espacio.RedNodos[PosicionBotRosado.x, PosicionBotRosado.y] = BotRosadoCabeza;
+                BotRosadoCabeza.esCabeza = true;
+            }
+        }
+
+        public void MatarBot(string nombre)
+        {
+            controladorAudio.ReproducirSonido(controladorAudio.ExplosionJugador);
+            if (nombre == "Rojo")
+            {
+                BotRojoCabeza.esCabeza = false;
+                estaVivoRojo = false;
+                Espacio.RedNodos[PosicionBotRojo.x, PosicionBotRojo.y] = BotRojoCabeza;
+                GameObject.Destroy(BotRojo);
+                foreach (Nodo nodo in EstelaBotRojo)
+                {
+                    GameObject.Destroy(nodo.ObjectoAsignado);
+                    nodo.esCabeza = false;
+                    nodo.esObstaculo = false;
+                    Espacio.RedNodos[nodo.id.x, nodo.id.y] = nodo;
+                }
+                ParticleSystem explosion = Texturas.instancia.Explosion;
+                Vector3 pos = Espacio.CoordenadaACentro(PosicionBotRojo);
+                explosion.transform.position = new Vector3(pos.x, pos.y, explosion.transform.position.z);
+                explosion.Play();
+            }
+            else if (nombre == "Azul")
+            {
+                BotAzulCabeza.esCabeza = false;
+                estaVivoAzul = false;
+                Espacio.RedNodos[PosicionBotAzul.x, PosicionBotAzul.y] = BotAzulCabeza;
+                GameObject.Destroy(BotAzul);
+                foreach (Nodo nodo in EstelaBotAzul)
+                {
+                    GameObject.Destroy(nodo.ObjectoAsignado);
+                    nodo.esCabeza = false;
+                    nodo.esObstaculo = false;
+                    Espacio.RedNodos[nodo.id.x, nodo.id.y] = nodo;
+                }
+                ParticleSystem explosion = Texturas.instancia.Explosion;
+                Vector3 pos = Espacio.CoordenadaACentro(PosicionBotAzul);
+                explosion.transform.position = new Vector3(pos.x, pos.y, explosion.transform.position.z);
+                explosion.Play();
+            }
+            else if (nombre == "Amarillo")
+            {
+                BotAmarilloCabeza.esCabeza = false;
+                estaVivoAmarillo = false;
+                Espacio.RedNodos[PosicionBotAmarillo.x, PosicionBotAmarillo.y] = BotAmarilloCabeza;
+                GameObject.Destroy(BotAmarillo);
+                foreach (Nodo nodo in EstelaBotAmarillo)
+                {
+                    GameObject.Destroy(nodo.ObjectoAsignado);
+                    nodo.esCabeza = false;
+                    nodo.esObstaculo = false;
+                    Espacio.RedNodos[nodo.id.x, nodo.id.y] = nodo;
+                }
+                ParticleSystem explosion = Texturas.instancia.Explosion;
+                Vector3 pos = Espacio.CoordenadaACentro(PosicionBotAmarillo);
+                explosion.transform.position = new Vector3(pos.x, pos.y, explosion.transform.position.z);
+                explosion.Play();
+            }
+            else
+            {
+                BotRosadoCabeza.esCabeza = false;
+                estaVivoRosado = false;
+                Espacio.RedNodos[PosicionBotRosado.x, PosicionBotRosado.y] = BotRosadoCabeza;
+                GameObject.Destroy(BotRosado);
+                foreach (Nodo nodo in EstelaBotRosado)
+                {
+                    GameObject.Destroy(nodo.ObjectoAsignado);
+                    nodo.esCabeza = false;
+                    nodo.esObstaculo = false;
+                    Espacio.RedNodos[nodo.id.x, nodo.id.y] = nodo;
+                }
+                ParticleSystem explosion = Texturas.instancia.Explosion;
+                Vector3 pos = Espacio.CoordenadaACentro(PosicionBotRosado);
+                explosion.transform.position = new Vector3(pos.x, pos.y, explosion.transform.position.z);
+                explosion.Play();
+            }
+        }
+
+        public void ActualizarEstelaParaBot(string nombreBot)
+        {
+            Vector2Int pos;
+            int tamagno;
+            LinkedList<Nodo> estela;
+            bool autorizar;
+            if (nombreBot == null)
+            {
+                return;
+            }
+            else if (nombreBot == "Rojo")
+            {
+                pos = PosicionBotRojo - DireccionBotRojo;
+                tamagno = TamagnoEstelaBotRojo;
+                estela = EstelaBotRojo;
+                autorizar = estaVivoRojo;
+            }
+            else if (nombreBot == "Azul")
+            {
+                pos = PosicionBotAzul - DireccionBotAzul;
+                tamagno = TamagnoEstelaBotAzul;
+                estela = EstelaBotAzul;
+                autorizar = estaVivoAzul;
+            }
+            else if (nombreBot == "Amarillo")
+            {
+                pos = PosicionBotAmarillo - DireccionBotAmarillo;
+                tamagno = TamagnoEstelaBotAmarillo;
+                estela = EstelaBotAmarillo;
+                autorizar = estaVivoAmarillo;
+            }
+            else
+            {
+                pos = PosicionBotRosado - DireccionBotRosado;
+                tamagno = TamagnoEstelaBotRosado;
+                estela = EstelaBotRosado;
+                autorizar = estaVivoRosado;
+            }
+
+            pos = SimularEspacioToroidalPara(pos);
+
+            Nodo ultimaEstela = Espacio.RedNodos[(int)pos.x, (int)pos.y];
+            ultimaEstela.id = new Vector2Int((int)pos.x, (int)pos.y);
+            estela.AddFirst(ultimaEstela);
+            ultimaEstela.esCabeza = false;
+            ultimaEstela.esObstaculo = true;
+            ultimaEstela.ObjectoAsignado = new GameObject();
+            ultimaEstela.ObjectoAsignado.AddComponent<SpriteRenderer>();
+            ultimaEstela.ObjectoAsignado.GetComponent<SpriteRenderer>().sprite = Texturas.instancia.EstelaGenerica;
+            ultimaEstela.ObjectoAsignado.transform.localScale = new Vector3(.3f, .3f, .3f);
+            Espacio.RedNodos[(int)pos.x, (int)pos.y] = ultimaEstela;
+            Vector3 PosicionArreglada = Espacio.CoordenadaACentro(pos);
+
+            ultimaEstela.ObjectoAsignado.transform.position = new Vector3(PosicionArreglada.x, PosicionArreglada.y, 1);
+            ultimaEstela.ObjectoAsignado.GetComponent<SpriteRenderer>().sortingOrder = 1;
+
+
+            if (estela.Count > tamagno && autorizar)
+            {
+                ultimaEstela = estela.Last.Value;
+                ultimaEstela.esCabeza = false;
+                ultimaEstela.esObstaculo = false;
+                Espacio.RedNodos[ultimaEstela.id.x, ultimaEstela.id.y] = ultimaEstela;
+                estela.RemoveLast();
+                GameObject.Destroy(ultimaEstela.ObjectoAsignado);
+            }
+
+            // Actualiza la estela
+            if (nombreBot == "Rojo")
+            {
+                EstelaBotRojo = estela;
+            }
+            else if (nombreBot == "Azul")
+            {
+                EstelaBotAzul = estela;
+            }
+            else if (nombreBot == "Amarillo")
+            {
+                EstelaBotAmarillo = estela;
+            }
+            else
+            {
+                EstelaBotRosado = estela;
+            }
+
+        }
+
+        public Vector2Int SimularEspacioToroidalPara(Vector2Int posicion)
+        {
+            Vector2Int NuevaPosicion = posicion;
+
+            // Si la posicion se sale del espacio, la regresa al otro lado
+            if (posicion.x < 0)
+            {
+                NuevaPosicion.x = Espacio.largo - 1;
+            }
+            else if (posicion.x >= Espacio.largo)
+            {
+                NuevaPosicion.x = 0;
+            }
+            else if (posicion.y < 0)
+            {
+                NuevaPosicion.y = Espacio.ancho - 1;
+            }
+            else if (posicion.y >= Espacio.ancho)
+            {
+                NuevaPosicion.y = 0;
+            }
+            return NuevaPosicion;
         }
 
         public void AsignarCabeza(int x, int y)
@@ -110,13 +529,18 @@ namespace Assets.Scripts
             Cabeza.esCabeza = true;
         }
 
-        public void ComprobarCabeza()
+        public void ComprobarCabeza(Nodo cabeza = null)
         {
-
-            if (Cabeza.item != null)
+            if (cabeza == null)
             {
-                Item item = Cabeza.item;
-                Cabeza.item = null;
+                cabeza = Cabeza;
+            }
+
+            if (cabeza.item != null)
+            {
+                GameObject.Destroy(cabeza.ObjectoAsignado);
+                Item item = cabeza.item;
+                cabeza.item = null;
                 items.AgregarItem(item);
                 if (item.nombre == "Combustible")
                 {
@@ -133,14 +557,14 @@ namespace Assets.Scripts
                     GenerarObjetoEnPosicionAleatoria("Bomba");
                     cantidadBombas++;
                 }
-                GameObject.Destroy(Cabeza.ObjectoAsignado);
                 controladorAudio.ReproducirSonido(controladorAudio.RecogerItemGenerico);
 
             }
-            else if (Cabeza.poder != null)
+            else if (cabeza.poder != null)
             {
-                Poder poder = Cabeza.poder;
-                Cabeza.poder = null;
+                GameObject.Destroy(cabeza.ObjectoAsignado);
+                Poder poder = cabeza.poder;
+                cabeza.poder = null;
                 poderes.AgregarPoder(poder);
                 if (poder.nombre == "Velocidad")
                 {
@@ -152,12 +576,8 @@ namespace Assets.Scripts
                     GenerarObjetoEnPosicionAleatoria("Escudo");
                     cantidadEscudos++;
                 }
-                GameObject.Destroy(Cabeza.ObjectoAsignado);
                 controladorAudio.ReproducirSonido(controladorAudio.RecogerPoderGenerico);
-
             }
-
-
         }
 
         public void GenerarObjetoEnPosicionAleatoria(string nombre)
@@ -219,7 +639,6 @@ namespace Assets.Scripts
             nodo.ObjectoAsignado = gameObject;
         }
 
-
         public void ActualizarEstela(Vector2Int pos)
         {
             Vector3 posicionEspacio = Espacio.CentroACoordenada(pos);
@@ -247,51 +666,44 @@ namespace Assets.Scripts
             }
         }
 
-        public void Esquivar()
+        public Vector2Int Esquivar(Vector2Int DireccionInicial, Nodo CabezaBot)
         {
-            // Los bots van a esquivar los obstaculos y la estela de la motocicleta. Para esto, cambia el vector direccion
-            if (esJugador)
+            Nodo siguienteNodo = CabezaBot.ObtenerNodoAdyacente(DireccionInicial).ObtenerNodoAdyacente(DireccionInicial);
+            if (siguienteNodo.esObstaculo || siguienteNodo.esCabeza)
             {
-                return;
-            }
-            int MakeDecision = rng.Next(0, 5);
-            if (MakeDecision == 0)
-            {
-                return;
-            }
-
-            if (Cabeza.ObtenerNodoAdyacente(direccion).esObstaculo)
-            {
-
-                if (direccion == new Vector2Int(-1, 0) || direccion == new Vector2Int(1, 0))
+                Vector2Int NuevaDireccion;
+                if (DireccionInicial == new Vector2Int(-1, 0) || DireccionInicial == new Vector2Int(1, 0))
                 {
                     int Decision = rng.Next(0, 2);
-                    if (Decision == 0)
+                    if (Decision == 0 && DireccionInicial.y != -1)
                     {
-                        direccion = new Vector2Int(0, 1);
+                        NuevaDireccion = new Vector2Int(0, 1);
                     }
                     else
                     {
-                        direccion = new Vector2Int(0, -1);
+                        NuevaDireccion = new Vector2Int(0, -1);
                     }
-                    return;
                 }
 
                 // Si va hacia arriba o hacia abajo, va a elegir aleatoriamente si ir hacia la izquierda o a la derecha
-                if (direccion == new Vector2Int(0, -1) || direccion == new Vector2Int(0, 1))
+                else
                 {
                     int Decision = rng.Next(0, 2);
-                    if (Decision == 0)
+                    if (Decision == 0 && DireccionInicial.x != -1)
                     {
-                        direccion = new Vector2Int(1, 0);
+                        NuevaDireccion = new Vector2Int(1, 0);
                     }
                     else
                     {
-                        direccion = new Vector2Int(-1, 0);
+                        NuevaDireccion = new Vector2Int(-1, 0);
                     }
-                    return;
                 }
 
+                return NuevaDireccion;
+            }
+            else
+            {
+                return DireccionInicial;
             }
 
         }
@@ -415,13 +827,12 @@ namespace Assets.Scripts
                     }
                 }
                 ComprobarCabeza();
-                Esquivar();
-                // Asigna la nueva cabeza de la motocicleta
-                Cabeza = Cabeza.ObtenerNodoAdyacente(direccion);
+                                
                 // Comprueba si la nueva cabeza de la motocicleta es un obstaculo
                 // Si es un obstaculo, la motocicleta muere
 
-                Cabeza.esCabeza = true;
+
+             
 
 
             }
@@ -438,9 +849,15 @@ namespace Assets.Scripts
                     BotarItemsYPoderesDeLaMotocicletaPorElMapaAlMorir();
                     controladorAudio.ReproducirSonido(controladorAudio.ExplosionJugador);
                 }
+                foreach (Nodo estelita in Estela)
+                {
+                    GameObject.Destroy(estelita.ObjectoAsignado);
+                }
                 estaVivo = false;
                 return false;
             }
+
+            MoverBots();
 
             return true;
         }

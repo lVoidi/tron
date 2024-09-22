@@ -119,6 +119,7 @@ namespace Assets.Scripts
                     {
                         nodo.Arriba = RedNodos[x, 0];
                     }
+                    RedNodos[x, y] = nodo;
                 }
             }
         }
@@ -137,6 +138,7 @@ namespace Assets.Scripts
                 }
                 PosicionarObjetoEnMapa(coord, objeto);
                 CategorizarNodo(objeto, coord);
+                RedNodos[coord.x, coord.y] = nodo;
                 Debug.Log($"Objeto {objeto.name} en {coord.x},{coord.y}");
 
             }
@@ -183,16 +185,15 @@ namespace Assets.Scripts
                     nombre = "Bomba",
                 };
             }
+            RedNodos[coord.x, coord.y] = nodo;
 
         }
 
         public void PosicionarObjetoEnMapa(Vector2Int coord, GameObject objeto)
         {
             Nodo nodo = ObtenerNodo(coord);
-            nodo.id = coord;
             Vector3 pos = CoordenadaACentro(coord);
             objeto.transform.position = new(pos.x, pos.y, 1);
-
         }
 
         // Función que toma una coordenada y le mueve el centro, ya que en unity 
