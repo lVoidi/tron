@@ -102,6 +102,16 @@ namespace Assets.Scripts
         public int TamagnoEstelaBotAmarillo = 3;
         public int TamagnoEstelaBotRosado = 3;
 
+        public int velocidadBotRojo = 5;
+        public int velocidadBotAzul = 5;
+        public int velocidadBotAmarillo = 5;
+        public int velocidadBotRosado = 5;
+
+        public int combustibleBotRojo = 100;
+        public int combustibleBotAzul = 100;
+        public int combustibleBotAmarillo = 100;
+        public int combustibleBotRosado = 100;
+
         public bool estaVivoRojo = true;
         public bool estaVivoAzul = true;
         public bool estaVivoAmarillo = true;
@@ -145,7 +155,6 @@ namespace Assets.Scripts
              * Estos pueden agrandar su estela de manera aleatoria y van a tratar de esquivar los obstaculos y la estela de la motocicleta
              * Esta funcion agarra los nodos en las esquinas y les asigna una direccion aleatoria
              * Esto dentro del espacio de nodos
-             * El bot rojo está en (0,0), el azul en 0,ancho-1, el amarillo en largo-1,0 y el rosado en largo-1,ancho-1
              */
 
             // Instancia los bots, estos simplemente se moveran y esquivaran obstaculos
@@ -197,6 +206,11 @@ namespace Assets.Scripts
             BotRosadoCabeza = Espacio.RedNodos[Espacio.largo - 6, Espacio.ancho - 6];
         }
         private float ObtenerAnguloAPartirDeVectorDireccion(Vector2Int dir)
+        /*
+         * Esta funcion obtiene el angulo de giro a partir de un vector de direccion
+         * :param dir: Vector2Int que representa la direccion
+         * :return: float que representa el angulo de giro
+         */
         {
             float anguloObtenidoAPartirDeCalculo = Mathf.Atan2(dir.y, dir.x) * Mathf.Rad2Deg;
             if (anguloObtenidoAPartirDeCalculo < 0)
@@ -206,9 +220,16 @@ namespace Assets.Scripts
             return anguloObtenidoAPartirDeCalculo;
         }
 
-        public void MoverBots()
+        public void MoverBots(bool rojo, bool azul, bool amarillo, bool rosado)
+        /*
+         * Mueve los bots en el espacio de nodos
+         * :param rojo: booleano que representa si el bot rojo se mueve
+         * :param azul: booleano que representa si el bot azul se mueve
+         * :param amarillo: booleano que representa si el bot amarillo se mueve
+         * :param rosado: booleano que representa si el bot rosado se mueve
+         */
         {
-            if (estaVivoRojo)
+            if (estaVivoRojo && rojo)
             {
                 // Hace un movimiento aleatorio
                 if (rng.Next(0, 7) == 0)
@@ -223,24 +244,61 @@ namespace Assets.Scripts
                     }
                 }
 
+                // Rng que aumenta la estela de vez en cuando
+                if (rng.Next(0, 25) == 0)
+                {
+                    TamagnoEstelaBotRojo++;
+                    controladorAudio.ReproducirSonido(controladorAudio.UtilizarAumentoEstela);
+                }
+
+                // Cambia la velocidad de manera aleatoria
+                if (rng.Next(0, 25) == 0)
+                {
+                    velocidadBotRojo = rng.Next(2, 11);
+                    controladorAudio.ReproducirSonido(controladorAudio.UtilizarAumentoVelocidad);
+                }
+
+                // Cambia el combustible de manera aleatoria
+                if (rng.Next(0, 15) == 0)
+                {
+                    combustibleBotRojo = rng.Next(100 - combustibleBotRojo, 100);
+                    controladorAudio.ReproducirSonido(controladorAudio.UtilizarGasolina);
+                }
+
+                // Esquiva obstaculos
                 DireccionBotRojo = Esquivar(DireccionBotRojo, BotRojoCabeza);
                 PosicionBotRojo += DireccionBotRojo;
                 PosicionBotRojo = SimularEspacioToroidalPara(PosicionBotRojo);
+                
+                // Cambia el transform dependiendo de la direccion, ajusta el angulo de giro
                 BotRojo.transform.position = Espacio.CoordenadaACentro(PosicionBotRojo);
                 BotRojo.transform.eulerAngles = new Vector3(0, 0, ObtenerAnguloAPartirDeVectorDireccion(DireccionBotRojo) - 90);
+
+                // Actualiza la estela
                 ActualizarEstelaParaBot("Rojo");
+
+                // Obtiene el nodo de la cabeza y lo actualiza
                 BotRojoCabeza.esCabeza = false;
                 BotRojoCabeza = Espacio.ObtenerNodo(PosicionBotRojo);
-                if (BotRojoCabeza.esObstaculo || BotRojoCabeza.esCabeza)
+
+                // Comprueba si la cabeza es un obstaculo o si se choca con la estela
+                ComprobarCabeza(BotRojoCabeza, true);
+
+                // Mata al bot si se choca con un obstaculo, con la estela o si se queda sin combustible
+                if (BotRojoCabeza.esObstaculo || BotRojoCabeza.esCabeza || combustibleBotRojo == 0)
                 {
                     MatarBot("Rojo");
                     return;
                 }
+
+                // Actualiza el espacio de nodos
                 BotRojoCabeza.esCabeza = true;
                 Espacio.RedNodos[PosicionBotRojo.x, PosicionBotRojo.y] = BotRojoCabeza;
-                // Actualiza los transforms de todos los bots
+
+                // Disminuye el combustible
+                combustibleBotRojo -= 1;
             }
-            if (estaVivoAzul)
+            if (estaVivoAzul && azul)
             {
                 if (rng.Next(0, 4) == 0)
                 {
@@ -254,6 +312,23 @@ namespace Assets.Scripts
                     }
                 }
 
+                if (rng.Next(0, 25) == 0)
+                {
+                    TamagnoEstelaBotAzul++;
+                    controladorAudio.ReproducirSonido(controladorAudio.UtilizarAumentoEstela);
+                }
+
+                if (rng.Next(0, 22) == 0)
+                {
+                    velocidadBotAzul = rng.Next(5, 11);
+                    controladorAudio.ReproducirSonido(controladorAudio.UtilizarAumentoVelocidad);
+                }
+
+                if (rng.Next(0, 15) == 0)
+                {
+                    combustibleBotAzul = rng.Next(100 - combustibleBotAzul, 100);
+                    controladorAudio.ReproducirSonido(controladorAudio.UtilizarGasolina);
+                }
 
                 DireccionBotAzul = Esquivar(DireccionBotAzul, BotAzulCabeza);
                 PosicionBotAzul += DireccionBotAzul;
@@ -263,15 +338,17 @@ namespace Assets.Scripts
                 ActualizarEstelaParaBot("Azul");
                 BotAzulCabeza.esCabeza = false;
                 BotAzulCabeza = Espacio.ObtenerNodo(PosicionBotAzul);
-                if (BotAzulCabeza.esObstaculo || BotAzulCabeza.esCabeza)
+                ComprobarCabeza(BotAzulCabeza, true);
+                if (BotAzulCabeza.esObstaculo || BotAzulCabeza.esCabeza || combustibleBotAzul == 0)
                 {
                     MatarBot("Azul");
                     return;
                 }
                 Espacio.RedNodos[PosicionBotAzul.x, PosicionBotAzul.y] = BotAzulCabeza;
                 BotAzulCabeza.esCabeza = true;
+                combustibleBotAzul -= 1;
             }
-            if (estaVivoAmarillo)
+            if (estaVivoAmarillo && amarillo)
             {
 
                 if (rng.Next(0, 10) == 0)
@@ -285,6 +362,24 @@ namespace Assets.Scripts
                         DireccionBotAmarillo = new Vector2Int(rng.Next(0, 1) == 0 ? 1 : -1, 0);
                     }
                 }
+
+                if (rng.Next(0, 25) == 0)
+                {
+                    TamagnoEstelaBotAmarillo++;
+                    controladorAudio.ReproducirSonido(controladorAudio.UtilizarAumentoEstela);
+                }
+
+                if (rng.Next(0, 22) == 0)
+                {
+                    velocidadBotAmarillo = rng.Next(5, 11);
+                    controladorAudio.ReproducirSonido(controladorAudio.UtilizarAumentoVelocidad);
+                }
+                if (rng.Next(0, 15) == 0)
+                {
+                    combustibleBotAmarillo = rng.Next(100 - combustibleBotAmarillo, 100);
+                    controladorAudio.ReproducirSonido(controladorAudio.UtilizarGasolina);
+                }
+
                 DireccionBotAmarillo = Esquivar(DireccionBotAmarillo, BotAmarilloCabeza);
 
                 PosicionBotAmarillo += DireccionBotAmarillo;
@@ -294,15 +389,17 @@ namespace Assets.Scripts
                 ActualizarEstelaParaBot("Amarillo");
                 BotAmarilloCabeza.esCabeza = false;
                 BotAmarilloCabeza = Espacio.ObtenerNodo(PosicionBotAmarillo);
-                if (BotAmarilloCabeza.esObstaculo || BotAmarilloCabeza.esCabeza)
+                ComprobarCabeza(BotAmarilloCabeza, true);
+                if (BotAmarilloCabeza.esObstaculo || BotAmarilloCabeza.esCabeza || combustibleBotAmarillo == 0)
                 {
                     MatarBot("Amarillo");
                     return;
                 }
                 Espacio.RedNodos[PosicionBotAmarillo.x, PosicionBotAmarillo.y] = BotAmarilloCabeza;
                 BotAmarilloCabeza.esCabeza = true;
+                combustibleBotAmarillo -= 1;
             }
-            if (estaVivoRosado)
+            if (estaVivoRosado && rosado)
             {
 
                 if (rng.Next(0, 11) == 0)
@@ -316,6 +413,25 @@ namespace Assets.Scripts
                         DireccionBotRosado = new Vector2Int(rng.Next(0, 1) == 0 ? 1 : -1, 0);
                     }
                 }
+
+                if (rng.Next(0, 25) == 0)
+                {
+                    TamagnoEstelaBotRosado++;
+                    controladorAudio.ReproducirSonido(controladorAudio.UtilizarAumentoEstela);
+                }
+
+                if (rng.Next(0, 25) == 0)
+                {
+                    velocidadBotRosado = rng.Next(5, 11);
+                    controladorAudio.ReproducirSonido(controladorAudio.UtilizarAumentoVelocidad);
+                }
+
+                if (rng.Next(0, 15) == 0)
+                {
+                    combustibleBotRosado = rng.Next(100 - combustibleBotRosado, 100);
+                    controladorAudio.ReproducirSonido(controladorAudio.UtilizarGasolina);
+                }
+
                 DireccionBotRosado = Esquivar(DireccionBotRosado, BotRosadoCabeza);
 
                 PosicionBotRosado += DireccionBotRosado;
@@ -325,24 +441,34 @@ namespace Assets.Scripts
                 ActualizarEstelaParaBot("Rosado");
                 BotRosadoCabeza.esCabeza = false;
                 BotRosadoCabeza = Espacio.ObtenerNodo(PosicionBotRosado);
-                if (BotRosadoCabeza.esObstaculo || BotRosadoCabeza.esCabeza)
+                ComprobarCabeza(BotRosadoCabeza, true);
+                if (BotRosadoCabeza.esObstaculo || BotRosadoCabeza.esCabeza || combustibleBotRosado == 0)
                 {
                     MatarBot("Rosado");
                     return;
                 }
                 Espacio.RedNodos[PosicionBotRosado.x, PosicionBotRosado.y] = BotRosadoCabeza;
                 BotRosadoCabeza.esCabeza = true;
+                combustibleBotRosado -= 1;
             }
         }
 
         public void MatarBot(string nombre)
+        /*
+         * Mata al bot y actualiza la estela
+         * :param nombre: string que representa el nombre del bot a matar.
+         */
         {
             controladorAudio.ReproducirSonido(controladorAudio.ExplosionJugador);
+            // Comprueba qué bot se murió exactamente
             if (nombre == "Rojo")
             {
+                // Actualiza el nodo en el espacio
                 BotRojoCabeza.esCabeza = false;
                 estaVivoRojo = false;
                 Espacio.RedNodos[PosicionBotRojo.x, PosicionBotRojo.y] = BotRojoCabeza;
+
+                // Destruye todos los objetos asignados
                 GameObject.Destroy(BotRojo);
                 foreach (Nodo nodo in EstelaBotRojo)
                 {
@@ -351,6 +477,7 @@ namespace Assets.Scripts
                     nodo.esObstaculo = false;
                     Espacio.RedNodos[nodo.id.x, nodo.id.y] = nodo;
                 }
+                // Crea una explosión en pos
                 ParticleSystem explosion = Texturas.instancia.Explosion;
                 Vector3 pos = Espacio.CoordenadaACentro(PosicionBotRojo);
                 explosion.transform.position = new Vector3(pos.x, pos.y, explosion.transform.position.z);
@@ -413,11 +540,17 @@ namespace Assets.Scripts
         }
 
         public void ActualizarEstelaParaBot(string nombreBot)
+        /*
+         * Actualiza la estela de la motocicleta.
+         * :param nombreBot: string que representa el nombre del bot a actualizar.
+         */
         {
             Vector2Int pos;
             int tamagno;
             LinkedList<Nodo> estela;
             bool autorizar;
+
+            // Ajusta las variables dependiendo de qué bot es, según nombreBot
             if (nombreBot == null)
             {
                 return;
@@ -451,6 +584,7 @@ namespace Assets.Scripts
                 autorizar = estaVivoRosado;
             }
 
+            // Ajusta la posicion y la agrega a la estela
             pos = SimularEspacioToroidalPara(pos);
 
             Nodo ultimaEstela = Espacio.RedNodos[(int)pos.x, (int)pos.y];
@@ -459,6 +593,7 @@ namespace Assets.Scripts
             ultimaEstela.esCabeza = false;
             ultimaEstela.esObstaculo = true;
             ultimaEstela.ObjectoAsignado = new GameObject();
+            ultimaEstela.ObjectoAsignado.name = $"{pos.x},{pos.y}";
             ultimaEstela.ObjectoAsignado.AddComponent<SpriteRenderer>();
             ultimaEstela.ObjectoAsignado.GetComponent<SpriteRenderer>().sprite = Texturas.instancia.EstelaGenerica;
             ultimaEstela.ObjectoAsignado.transform.localScale = new Vector3(.3f, .3f, .3f);
@@ -477,6 +612,13 @@ namespace Assets.Scripts
                 Espacio.RedNodos[ultimaEstela.id.x, ultimaEstela.id.y] = ultimaEstela;
                 estela.RemoveLast();
                 GameObject.Destroy(ultimaEstela.ObjectoAsignado);
+
+                GameObject gameObjectAtPosition = GameObject.Find($"{ultimaEstela.id.x},{ultimaEstela.id.y}");
+                if (gameObjectAtPosition != null)
+                {
+                    GameObject.Destroy(gameObjectAtPosition);
+                }
+
             }
 
             // Actualiza la estela
@@ -500,6 +642,11 @@ namespace Assets.Scripts
         }
 
         public Vector2Int SimularEspacioToroidalPara(Vector2Int posicion)
+        /*
+         * Toma una posicion y la regresa al otro lado del espacio si se sale de este.
+         * :param posicion: Vector2Int que representa la posicion a simular.
+         * :return: Vector2Int que representa la posicion simulada.
+         */
         {
             Vector2Int NuevaPosicion = posicion;
 
@@ -524,75 +671,125 @@ namespace Assets.Scripts
         }
 
         public void AsignarCabeza(int x, int y)
+        /*
+         * Asigna la cabeza de la motocicleta en la posición (x, y) del espacio.
+         * :param x: int que representa la coordenada x de la cabeza.
+         * :param y: int que representa la coordenada y de la cabeza.
+         */
         {
             Cabeza = Espacio.RedNodos[x, y];
             Cabeza.esCabeza = true;
         }
 
-        public void ComprobarCabeza(Nodo cabeza = null)
+        public void ComprobarCabeza(Nodo cabeza = null, bool esBot = false)
+        /*
+         * Toma una cabeza y comprueba si en esa posición hay un item o un poder.
+         * :param cabeza: Nodo que representa la cabeza de la motocicleta.
+         * :param esBot: bool que dice si la cabeza es de un bot o no.
+         */
         {
+            // Si no se especifica cabeza, se pone como Cabeza de default (osea, la cabeza del jugador)
             if (cabeza == null)
             {
                 cabeza = Cabeza;
             }
 
+            // Si la cabeza tiene un item, lo recoge. Si es un bot, simplemente lo mueve de posicion, ya que 
+            // los bots no pueden recoger items y se comportan de manera aleatoria.
             if (cabeza.item != null)
             {
                 GameObject.Destroy(cabeza.ObjectoAsignado);
                 Item item = cabeza.item;
                 cabeza.item = null;
-                items.AgregarItem(item);
+                if (!esBot)
+                {
+                    items.AgregarItem(item);
+                }
                 if (item.nombre == "Combustible")
                 {
                     GenerarObjetoEnPosicionAleatoria("Combustible");
-                    cantidadCombustibles++;
+                    if (!esBot)
+                    {
+                        cantidadCombustibles++;
+                    }
                 }
                 else if (item.nombre == "Estela")
                 {
                     GenerarObjetoEnPosicionAleatoria("Estela");
-                    cantidadEstelas++;
+
+                    if (!esBot)
+                    {
+                        cantidadEstelas++;
+                    }
                 }
                 else if (item.nombre == "Bomba")
                 {
                     GenerarObjetoEnPosicionAleatoria("Bomba");
-                    cantidadBombas++;
+                    if (!esBot)
+                    {
+                        cantidadBombas++;
+                    }
                 }
                 controladorAudio.ReproducirSonido(controladorAudio.RecogerItemGenerico);
 
             }
+
+            // Si la cabeza tiene un poder, lo recoge. Si es un bot, simplemente lo mueve de posicion, ya que
+            // los bots no pueden recoger poderes y se comportan de manera aleatoria.
             else if (cabeza.poder != null)
             {
                 GameObject.Destroy(cabeza.ObjectoAsignado);
                 Poder poder = cabeza.poder;
                 cabeza.poder = null;
-                poderes.AgregarPoder(poder);
+                if (!esBot)
+                {
+                    poderes.AgregarPoder(poder);
+                }
                 if (poder.nombre == "Velocidad")
                 {
                     GenerarObjetoEnPosicionAleatoria("Velocidad");
-                    cantidadVelocidades++;
+                    if (!esBot)
+                    {
+                        cantidadVelocidades++;
+                    }
                 }
                 else if (poder.nombre == "Escudo")
                 {
                     GenerarObjetoEnPosicionAleatoria("Escudo");
-                    cantidadEscudos++;
+                    if (!esBot)
+                    {
+                        cantidadEscudos++;
+                    }
                 }
                 controladorAudio.ReproducirSonido(controladorAudio.RecogerPoderGenerico);
             }
         }
 
         public void GenerarObjetoEnPosicionAleatoria(string nombre)
+        /*
+         * Genera un objeto en una posición aleatoria del espacio. El nodo no puede ser 
+         * obstaculo, cabeza, poder o item.
+         * :param nombre: string que representa el nombre del objeto a generar.
+         */
         {
+            // Toma una coordenada aleatoria
             Vector2Int coord = new Vector2Int(rng.Next(0, Espacio.largo), rng.Next(0, Espacio.ancho));
+
+            // Toma el nodo en esa coordenada
             Nodo nodo = Espacio.RedNodos[coord.x, coord.y];
-            while (nodo.esObstaculo || nodo.item != null || nodo.poder != null)
+
+            // Si en esa coordenada ya hay un obstáculo, un item o un poder, busca otra coordenada
+            while (nodo.esObstaculo || nodo.item != null || nodo.poder != null || nodo.esCabeza)
             {
                 coord = new Vector2Int(rng.Next(0, Espacio.largo), rng.Next(0, Espacio.ancho));
                 nodo = Espacio.RedNodos[coord.x, coord.y];
             }
 
+            // Crea el gameobject
             GameObject gameObject = new GameObject();
             gameObject.AddComponent<SpriteRenderer>();
-            // Crea el gameobject a partir del sprite
+
+            // Le pone el sprite y actualiza las propiedades del nodo, dependiendo del nombre
             if (nombre == "Escudo")
             {
                 gameObject.GetComponent<SpriteRenderer>().sprite = Texturas.instancia.Escudo;
@@ -633,22 +830,39 @@ namespace Assets.Scripts
                     nombre = "Bomba",
                 };
             }
+            // Actualiza las propiedades del transform y del sprite
             gameObject.GetComponent<SpriteRenderer>().sortingOrder = 10;
             gameObject.transform.localScale = Texturas.instancia.escala;
             gameObject.transform.position = Espacio.CoordenadaACentro(coord);
             nodo.ObjectoAsignado = gameObject;
+
+            // Actualiza la posicion en el espacio
+            Espacio.RedNodos[coord.x, coord.y] = nodo;
         }
 
         public void ActualizarEstela(Vector2Int pos)
+        /*
+         * Actualiza la estela del jugador para la posicion pos.
+         * - Si la estela es mayor que el tamaño de la estela, elimina el último nodo de la estela.
+         * :param pos: Vector2Int que representa la posición de la cabeza.
+         */
         {
+            // Transforma la posición de unity (la cual esta centrada) a la posición en la matriz
             Vector3 posicionEspacio = Espacio.CentroACoordenada(pos);
+
+            // Toma el nodo
             Nodo ultimaEstela = Espacio.RedNodos[(int)posicionEspacio.x, (int)posicionEspacio.y];
-            ultimaEstela.id = new Vector2Int((int)pos.x, (int)pos.y);
+
             Estela.AddFirst(ultimaEstela);
+
+            // Actualiza las propiedades del nodo
+            ultimaEstela.id = new Vector2Int((int)pos.x, (int)pos.y);
             ultimaEstela.id = Estela.Last.Value.id;
-            ultimaEstela.esCabeza = false;
             ultimaEstela.esObstaculo = true;
+
+            // Crea el GameObject y le pone como nombre su ubicación en el espacio
             ultimaEstela.ObjectoAsignado = new GameObject();
+            ultimaEstela.ObjectoAsignado.name = $"{posicionEspacio.x},{posicionEspacio.y}";
             ultimaEstela.ObjectoAsignado.AddComponent<SpriteRenderer>();
             ultimaEstela.ObjectoAsignado.GetComponent<SpriteRenderer>().sprite = Texturas.instancia.EstelaGenerica;
             ultimaEstela.ObjectoAsignado.transform.localScale = new Vector3(.3f, .3f, .3f);
@@ -656,20 +870,53 @@ namespace Assets.Scripts
             ultimaEstela.ObjectoAsignado.GetComponent<SpriteRenderer>().sortingOrder = 1;
 
 
+            // Si la estela es mayor que el tamaño de la estela, elimina el último nodo de la estela
             if (Estela.Count > tamagnoEstela)
             {
+                // Actualiza las propiedades
                 ultimaEstela = Estela.Last.Value;
                 ultimaEstela.esCabeza = false;
                 ultimaEstela.esObstaculo = false;
+
+                // Actualiza el espacio
+                Espacio.RedNodos[ultimaEstela.id.x, ultimaEstela.id.y] = ultimaEstela;
+
+                // Elimina el GameObject
                 Estela.RemoveLast();
                 GameObject.Destroy(ultimaEstela.ObjectoAsignado);
+
+                // Busca duplicados
+                GameObject gameObjectAtPosition = GameObject.Find($"{ultimaEstela.id.x},{ultimaEstela.id.y}");
+                if (gameObjectAtPosition != null)
+                {
+                    GameObject.Destroy(gameObjectAtPosition);
+                }
+
             }
         }
 
         public Vector2Int Esquivar(Vector2Int DireccionInicial, Nodo CabezaBot)
+        /*
+         * Esta función hace que el bot esquive los obstáculos y la estela de la motocicleta.
+         * Hace esto tomando los dos nodos contiguos a la cabeza del mismo, y comprueba si alguno
+         * de esos es cabeza u obstáculo.
+         * 
+         * Parámetros:
+         *  - DireccionInicial: Vector2Int que representa la dirección en la que se mueve el bot.
+         *  - CabezaBot: Nodo que representa la cabeza del bot.
+         * 
+         * Retorna:
+         *  - Vector2Int: Retorna la nueva dirección en la que se va a mover el bot.
+         */
         {
-            Nodo siguienteNodo = CabezaBot.ObtenerNodoAdyacente(DireccionInicial).ObtenerNodoAdyacente(DireccionInicial);
-            if (siguienteNodo.esObstaculo || siguienteNodo.esCabeza)
+            Nodo siguienteNodo = CabezaBot.ObtenerNodoAdyacente(DireccionInicial);
+            Nodo siguienteSiguienteNodo = siguienteNodo.ObtenerNodoAdyacente(DireccionInicial);
+
+            // Comprueba si los dos siguientes nodos son obstáculos o la cabeza de otro bot o jugador
+            if (
+                siguienteSiguienteNodo.esObstaculo || siguienteSiguienteNodo.esCabeza ||
+                siguienteNodo.esCabeza || siguienteNodo.esObstaculo
+            )
             {
                 Vector2Int NuevaDireccion;
                 if (DireccionInicial == new Vector2Int(-1, 0) || DireccionInicial == new Vector2Int(1, 0))
@@ -709,6 +956,9 @@ namespace Assets.Scripts
         }
 
         public void BotarItemsYPoderesDeLaMotocicletaPorElMapaAlMorir()
+        /*
+         * Esta función bota los items y poderes de la motocicleta por el mapa al morir.
+         */
         {
             // Bota los poderes
             foreach (Poder poder in poderes.poderes)
@@ -724,14 +974,21 @@ namespace Assets.Scripts
         }
 
         public bool Mover(Vector2Int pos)
+        /*
+         * Esta función mueve la motocicleta a la posición pos. Si la motocicleta se queda sin combustible, muere.
+         * Si la motocicleta choca con un obstáculo, muere. Si la motocicleta choca con un item, lo recoge.
+         * Si la motocicleta choca con un poder, lo recoge.
+         * 
+         * Parámetros:
+         *  - pos: Vector2Int que representa la posición a la que se va a mover la motocicleta.
+         * 
+         * Retorna:
+         *  - bool: Retorna true si la motocicleta sigue viva, y false si la motocicleta muere.
+         */
         {
-            posicion = pos;
-            Vector3 posicionEspacio = Espacio.CentroACoordenada(pos);
-            Cabeza = Espacio.RedNodos[(int)posicionEspacio.x, (int)posicionEspacio.y];
-            // Analiza si el jugador sigue vivo, mediante el combustible. Si es así, va a intercambiar
-            // la cabeza de la motocicleta por el nodo adyacente en la dirección de movimiento.
             if (combustible > 0 && estaVivo)
             {
+                // Se acaba el tiempo de velocidad
                 if (TiempoDesdeUsoVelocidad >= TiempoLimiteVelocidad)
                 {
                     activarCambioSprite = true;
@@ -740,6 +997,7 @@ namespace Assets.Scripts
                     TiempoDesdeUsoVelocidad = 0;
                 }
 
+                // Se acaba el tiempo de escudo
                 if (TiempoDesdeUsoInmunidad >= 5f)
                 {
                     activarCambioSprite = true;
@@ -747,9 +1005,12 @@ namespace Assets.Scripts
                     TiempoDesdeUsoInmunidad = 0;
                 }
 
+                // Se acaba el tiempo de bomba
                 if (TiempoDesdeUsoBomba >= 3f)
                 {
+                    // Destruye el objeto inicial de la bomba
                     GameObject.Destroy(bomba);
+
                     // Explota la bomba
                     if (bombaExplotando == false)
                     {
@@ -762,6 +1023,7 @@ namespace Assets.Scripts
                         Vector3 tempCoord = Espacio.CoordenadaACentro(nodoBomba.id);
                         explosion.transform.position = tempCoord;
 
+                        // Crea obstáculos en un area cuadrada de 3x3
                         nodoBomba.esObstaculo = true;
                         nodoBomba.Abajo.esObstaculo = true;
                         nodoBomba.Abajo.Izquierda.esObstaculo = true;
@@ -773,7 +1035,10 @@ namespace Assets.Scripts
                         controladorAudio.ReproducirSonido(controladorAudio.ExplosionBomba);
 
                     }
+
                     bombaExplotando = true;
+
+                    // El tiempo de la explosion se acabo asi que vuelve los obstáculos a la normalidad
                     if (TiempoDesdeExplosionNuclear >= 1f)
                     {
                         GameObject.Destroy(explosion);
@@ -799,17 +1064,20 @@ namespace Assets.Scripts
 
                 Cabeza.esCabeza = false;
 
+                // Cambia de cabeza por la nueva posicion
                 Cabeza = Espacio.RedNodos[x, y];
+
                 if (Cabeza.esObstaculo || Cabeza.esCabeza)
                 {
-                    // Va a generar una explosion en la cabeza y en cada posicion de la estela
-                    // La posicion de la estela es estela.id, pero debe pasarse a centro de coordenada
+                    // Comprueba si tiene escudo y si lo tiene, o quita y lo vuelve inmune
                     if (esInmune)
                     {
                         esInmune = false;
                         TiempoDesdeUsoInmunidad = 0;
                         activarCambioSprite = true;
                     }
+
+                    // Si no es inmune, mata al jugador y destruye cada una de las partes de la estela
                     else
                     {
                         foreach (Nodo nodo in Estela)
@@ -826,15 +1094,9 @@ namespace Assets.Scripts
                         return false;
                     }
                 }
+
+                // Esto recoge los items que hayan en la cabeza
                 ComprobarCabeza();
-                                
-                // Comprueba si la nueva cabeza de la motocicleta es un obstaculo
-                // Si es un obstaculo, la motocicleta muere
-
-
-             
-
-
             }
 
             // Si la motocicleta se queda sin combustible, muere
@@ -857,17 +1119,20 @@ namespace Assets.Scripts
                 return false;
             }
 
-            MoverBots();
 
             return true;
         }
 
 
         public void UtilizarPoder()
+        /*
+         * Esta funcion utiliza un poder en la motocicleta. Siempre se prioriza la velocidad.
+         */
         {
-            // Saca un poder de la pila de poderes
-            Poder poder;
+            Poder poder = null;
 
+            // Ya que el usuario decide que poder usar con el alt, entonces se saca el poder de la pila
+            // dependiendo de la eleccion del usuario
             if (PoderUtilizado == 1)
             {
                 poder = poderes.SacarPoderEspecifico("Velocidad");
@@ -882,6 +1147,27 @@ namespace Assets.Scripts
                 return;
             }
 
+            // Si el poder es velocidad, aumenta la velocidad de la 
+            if (poder.nombre == "Velocidad")
+            {
+                int nuevaVelocidad = velocidad + rng.Next(1, 11 - velocidad);
+
+                // Si la velocidad sobrepasa el limite, se establece en el limite
+                if (nuevaVelocidad > 10)
+                {
+                    nuevaVelocidad = 10;
+                }
+
+                velocidad = nuevaVelocidad;
+
+                // La velocidad funciona por tiempo aleatorio
+                TiempoLimiteVelocidad = (float)rng.Next(3, 7);
+                cantidadVelocidades--;
+
+                controladorAudio.ReproducirSonido(controladorAudio.UtilizarAumentoVelocidad);
+                controladorAudio.ReproducirMusica(controladorAudio.SonidoFondoVelocidad);
+            }
+
             // Si el poder es inmunidad, la motocicleta se vuelve inmune
             if (poder.nombre == "Escudo")
             {
@@ -890,25 +1176,16 @@ namespace Assets.Scripts
                 controladorAudio.ReproducirSonido(controladorAudio.UtilizarEscudo);
             }
 
-
-            // Si el poder es velocidad, aumenta la velocidad de la 
-            if (poder.nombre == "Velocidad")
-            {
-                int nuevaVelocidad = velocidad + rng.Next(1, 11 - velocidad);
-                if (nuevaVelocidad > 10)
-                {
-                    nuevaVelocidad = 10;
-                }
-                velocidad = nuevaVelocidad;
-                TiempoLimiteVelocidad = (float)rng.Next(3, 7);
-                cantidadVelocidades--;
-                controladorAudio.ReproducirSonido(controladorAudio.UtilizarAumentoVelocidad);
-                controladorAudio.ReproducirMusica(controladorAudio.SonidoFondoVelocidad);
-            }
         }
 
         public void UtilizarItem(Vector2Int pos)
+        /*
+         * Esta funcion utiliza un item en la motocicleta. Siempre se prioriza la gasolina.
+         * :param pos: Este parametro es necesario para determinar la posicion de la bomba,
+         * la cual se va a posicionar detras del jugador
+         */
         {
+            // Como prioriza el item de combustible, entonces lo busca y lo saca de la cola de una vez
             if (items.BuscarItem("Combustible") != null)
             {
                 combustible += rng.Next(1, 100 - combustible);
@@ -924,7 +1201,6 @@ namespace Assets.Scripts
                 return;
             }
 
-            // Si el item es bomba, pone un obstaculo en la dirección contraria a la que se mueve la motocicleta
             else if (item.nombre == "Bomba")
             {
                 if (cantidadBombas == 0 || bomba != null)
@@ -937,6 +1213,7 @@ namespace Assets.Scripts
                 nodoBomba = Espacio.ObtenerNodo(nuevaPos);
                 nodoBomba.id = nuevaPos;
                 bomba = new GameObject();
+                bomba.name = "Bomba";
                 bomba.AddComponent<SpriteRenderer>();
                 bomba.GetComponent<SpriteRenderer>().sprite = Texturas.instancia.BombaRoja;
                 bomba.transform.localScale = new Vector3(.3f, .3f, .3f);
@@ -958,6 +1235,9 @@ namespace Assets.Scripts
 
 
     public class PilaPoderes
+    /*
+     * Esta clase representa una pila (stack) de poderes
+     */
     {
         public LinkedList<Poder> poderes;
 
@@ -967,11 +1247,20 @@ namespace Assets.Scripts
         }
 
         public void AgregarPoder(Poder poder)
+        /*
+         * Esta funcion agrega un poder a la pila de poderes
+         * :param poder: poder a agregar
+         */
         {
             poderes.AddFirst(poder);
         }
 
         public Poder SacarPoderEspecifico(string nombre)
+        /*
+         * Esta funcion saca un poder especifico de la pila de poderes
+         * :param nombre: nombre del poder a sacar
+         * :return: Poder
+         */
         {
             foreach (Poder poder in poderes)
             {
@@ -985,6 +1274,11 @@ namespace Assets.Scripts
         }
 
         public Poder SacarPoder()
+        /*
+         * Esta funcion saca un poder de la pila de poderes.
+         * Siempre saca el primero ya que es un stack
+         * :return: Poder
+         */
         {
             if (poderes.Count > 0)
             {
@@ -996,16 +1290,11 @@ namespace Assets.Scripts
         }
     }
 
-    // Clase que representa un poder
-    public class Poder
-    {
-        public string nombre;
-    }
-
-    // Clase que representa una cola de items
     public class ColaItems
+    /*
+     * Esta clase representa una cola de items
+     */
     {
-        // Arreglo de items
         public LinkedList<Item> items;
 
         public ColaItems()
@@ -1015,6 +1304,10 @@ namespace Assets.Scripts
 
 
         public Item BuscarItem(string nombre)
+        /*
+         * Esta funcion busca un item en la cola de items
+         * :param nombre: nombre del item a buscar
+         */
         {
             foreach (Item item in items)
             {
@@ -1060,11 +1353,17 @@ namespace Assets.Scripts
         }
     }
 
-    // Clase que representa un item
     public class Item
     {
         public string nombre;
     }
+
+    public class Poder
+    {
+        public string nombre;
+    }
+
+
 }
 
 

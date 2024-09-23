@@ -120,6 +120,34 @@ public class Controlador : MonoBehaviour
     {
         // Aumenta el cambio de tiempo desde la última actualización
         TiempoUltimoMovimiento += Time.deltaTime;
+        TiempoDesdeMovimientoAmarillo += Time.deltaTime;
+        TiempoDesdeMovimientoAzul += Time.deltaTime;
+        TiempoDesdeMovimientoRojo += Time.deltaTime;
+        TiempoDesdeMovimientoRosado += Time.deltaTime;
+
+        bool moverRojo = TiempoDesdeMovimientoRojo >= TiempoEntreMovimientosRojo;
+        bool moverAzul = TiempoDesdeMovimientoAzul >= TiempoEntreMovimientosAzul;
+        bool moverAmarillo = TiempoDesdeMovimientoAmarillo >= TiempoEntreMovimientosAmarillo;
+        bool moverRosado = TiempoDesdeMovimientoRosado >= TiempoEntreMovimientosRosado;
+
+        InstanciaMotoJugador.MoverBots(moverRojo, moverAzul, moverAmarillo, moverRosado);
+
+        if (moverRojo)
+        {
+            TiempoDesdeMovimientoRojo -= TiempoEntreMovimientosRojo;
+        }
+        if (moverAzul)
+        {
+            TiempoDesdeMovimientoAzul -= TiempoEntreMovimientosAzul;
+        }
+        if (moverAmarillo)
+        {
+            TiempoDesdeMovimientoAmarillo -= TiempoEntreMovimientosAmarillo;
+        }
+        if (moverRosado)
+        {
+            TiempoDesdeMovimientoRosado -= TiempoEntreMovimientosRosado;
+        }
 
         // Si el tiempo desde el último movimiento es mayor al tiempo entre movimientos
         if (TiempoUltimoMovimiento >= TiempoEntreMovimientos)
@@ -231,6 +259,10 @@ public class Controlador : MonoBehaviour
     {
         PosicionNodo = new Vector2Int((int)Cabeza.id.x, (int)Cabeza.id.y);
         TiempoEntreMovimientos = 0.035f * (12 - InstanciaMotoJugador.velocidad);
+        TiempoEntreMovimientosAmarillo = 0.035f * (12 - InstanciaMotoJugador.velocidadBotAmarillo);
+        TiempoEntreMovimientosAzul = 0.035f * (12 - InstanciaMotoJugador.velocidadBotAzul);
+        TiempoEntreMovimientosRojo = 0.035f * (12 - InstanciaMotoJugador.velocidadBotRojo);
+        TiempoEntreMovimientosRosado = 0.035f * (12 - InstanciaMotoJugador.velocidadBotRosado);
         if (InstanciaMotoJugador.velocidad > 5)
         {
             InstanciaMotoJugador.TiempoDesdeUsoVelocidad += Time.deltaTime;
