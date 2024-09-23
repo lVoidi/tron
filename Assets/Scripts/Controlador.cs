@@ -13,10 +13,6 @@ public class Controlador : MonoBehaviour
 {
     // Instancia de la motocicleta del jugador
     public Motocicleta InstanciaMotoJugador;
-    public Motocicleta Roja;
-    public Motocicleta Azul;
-    public Motocicleta Amarilla;
-    public Motocicleta Rosada;
 
     public Red Espacio;
     // Posición de la celda en la que se encuentra la motocicleta
