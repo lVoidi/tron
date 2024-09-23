@@ -40,7 +40,7 @@ public class ControladorAudio : MonoBehaviour
         FuenteEfectos.PlayOneShot(sonido);
     }
 
-    public void PararTodosLosSondos()
+    public void PararTodosLosSonidos()
     {
         FuenteMusica.Stop();
         FuenteEfectos.Stop();

@@ -1086,7 +1086,7 @@ namespace Assets.Scripts
                         estaVivo = false;
                         if (esJugador)
                         {
-                            controladorAudio.PararTodosLosSondos();
+                            controladorAudio.PararTodosLosSonidos();
                         }
                         controladorAudio.ReproducirSonido(controladorAudio.ExplosionJugador);
                         BotarItemsYPoderesDeLaMotocicletaPorElMapaAlMorir();
@@ -1105,7 +1105,7 @@ namespace Assets.Scripts
                 {
                     if (esJugador)
                     {
-                        controladorAudio.PararTodosLosSondos();
+                        controladorAudio.PararTodosLosSonidos();
                     }
                     BotarItemsYPoderesDeLaMotocicletaPorElMapaAlMorir();
                     controladorAudio.ReproducirSonido(controladorAudio.ExplosionJugador);
