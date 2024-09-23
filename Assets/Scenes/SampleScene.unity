@@ -16073,7 +16073,7 @@ MonoBehaviour:
   ContadorBomba: {fileID: 1758919241}
   Estadisticas: {fileID: 1084814887}
   Explosion: {fileID: 930324484}
-  BombaNuclearTiradaPorElEstadoDeIsraelEnEspacioCivilPalestino: {fileID: 21300000, guid: 5973f3207dbaeff4c8522afc6acbe882, type: 3}
+  BombaNuclear: {fileID: 21300000, guid: 5973f3207dbaeff4c8522afc6acbe882, type: 3}
   BombaRoja: {fileID: 21300000, guid: ec368bc86d4d1ac48ab5081a361ecbd1, type: 3}
   escala: {x: 0, y: 0, z: 0}
 --- !u!1 &1519697689
@@ -16261,6 +16261,14 @@ MonoBehaviour:
   PosicionNodo: {x: 0, y: 0}
   TiempoUltimoMovimiento: 0
   TiempoEntreMovimientos: 0.2
+  TiempoDesdeMovimientoRojo: 0
+  TiempoEntreMovimientosRojo: 0
+  TiempoDesdeMovimientoAzul: 0
+  TiempoEntreMovimientosAzul: 0
+  TiempoDesdeMovimientoAmarillo: 0
+  TiempoEntreMovimientosAmarillo: 0
+  TiempoDesdeMovimientoRosado: 0
+  TiempoEntreMovimientosRosado: 0
   seleccion: {fileID: 0}
   controladorAudio: {fileID: 0}
 --- !u!1 &1591158381
