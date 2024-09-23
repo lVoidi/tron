@@ -1016,7 +1016,7 @@ namespace Assets.Scripts
                         explosion = new();
                         explosion.AddComponent<SpriteRenderer>();
                         SpriteRenderer visualizacion = explosion.GetComponent<SpriteRenderer>();
-                        visualizacion.sprite = Texturas.instancia.BombaNuclearTiradaPorElEstadoDeIsraelEnEspacioCivilPalestino;
+                        visualizacion.sprite = Texturas.instancia.BombaNuclear;
                         explosion.transform.localScale = new Vector3(0.954f / 3, 1.465f / 3, 1f / 3);
                         visualizacion.sortingOrder = 1;
                         Vector3 tempCoord = Espacio.CoordenadaACentro(nodoBomba.id);

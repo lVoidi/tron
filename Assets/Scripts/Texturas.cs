@@ -42,7 +42,7 @@ public class Texturas : MonoBehaviour
 
     public ParticleSystem Explosion;
     // 0.954 / 1.465 / 1
-    public Sprite BombaNuclearTiradaPorElEstadoDeIsraelEnEspacioCivilPalestino;
+    public Sprite BombaNuclear;
     // 1.4419 / 1.4419 / 1.4419
     public Sprite BombaRoja;
 
