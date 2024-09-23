@@ -28,7 +28,6 @@ using System.Threading.Tasks;
 using Random = System.Random;
 using Quaternion = UnityEngine.Quaternion;
 using Vector3 = UnityEngine.Vector3;
-using static UnityEditor.PlayerSettings;
 using UnityEngine.Rendering.Universal;
 using JetBrains.Annotations;
 namespace Assets.Scripts
